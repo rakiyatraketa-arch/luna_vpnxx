@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:a="http://schemas.android.com/apk/res/android"
+    a:shape="rectangle">
+    <gradient
+        a:angle="135"
+        a:endColor="#1B2042"
+        a:startColor="#14182B"
+        a:type="linear" />
+    <stroke
+        a:width="1dp"
+        a:color="@color/luna_card_stroke" />
+    <corners a:radius="20dp" />
+</shape>

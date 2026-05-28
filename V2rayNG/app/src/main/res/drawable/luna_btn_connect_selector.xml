@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:a="http://schemas.android.com/apk/res/android">
+    <item a:state_selected="true" a:drawable="@drawable/luna_btn_connect" />
+    <item a:state_activated="true" a:drawable="@drawable/luna_btn_connect" />
+    <item a:drawable="@drawable/luna_btn_connect_off" />
+</selector>

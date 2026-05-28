@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:a="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape a:shape="oval">
+            <solid a:color="#221F2647" />
+        </shape>
+    </item>
+    <item
+        a:bottom="10dp"
+        a:left="10dp"
+        a:right="10dp"
+        a:top="10dp">
+        <shape a:shape="oval">
+            <solid a:color="@color/luna_card" />
+            <stroke
+                a:width="2dp"
+                a:color="@color/luna_moon_off" />
+        </shape>
+    </item>
+</layer-list>

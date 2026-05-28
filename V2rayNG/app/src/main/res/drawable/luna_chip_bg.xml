@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:a="http://schemas.android.com/apk/res/android"
+    a:shape="rectangle">
+    <solid a:color="#221B2042" />
+    <stroke
+        a:width="1dp"
+        a:color="@color/luna_card_stroke" />
+    <corners a:radius="16dp" />
+</shape>

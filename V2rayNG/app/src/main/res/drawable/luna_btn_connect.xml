@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res-auto"
+    xmlns:a="http://schemas.android.com/apk/res/android">
+    <!-- outer glow halo -->
+    <item>
+        <shape a:shape="oval">
+            <solid a:color="#3300F0FF" />
+        </shape>
+    </item>
+    <item
+        a:bottom="6dp"
+        a:left="6dp"
+        a:right="6dp"
+        a:top="6dp">
+        <shape a:shape="oval">
+            <solid a:color="#5500F0FF" />
+        </shape>
+    </item>
+    <!-- main gradient body -->
+    <item
+        a:bottom="14dp"
+        a:left="14dp"
+        a:right="14dp"
+        a:top="14dp">
+        <shape a:shape="oval">
+            <gradient
+                a:angle="135"
+                a:endColor="@color/luna_violet"
+                a:startColor="@color/luna_cyan"
+                a:type="linear" />
+            <stroke
+                a:width="1dp"
+                a:color="#88FFFFFF" />
+        </shape>
+    </item>
+</layer-list>
