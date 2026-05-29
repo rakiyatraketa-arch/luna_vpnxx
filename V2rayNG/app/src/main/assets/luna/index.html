@@ -193,6 +193,16 @@
                 animation: none !important;
             }
         }
+
+        /* ===== Режим «Для слабых устройств» (включается в настройках) =====
+           Полностью отключает ВСЕ анимации интерфейса. Стекло/блюр и внешний
+           вид сохраняются, убирается только постоянное движение → максимум FPS. */
+        .low-power *,
+        .low-power *::before,
+        .low-power *::after {
+            animation: none !important;
+            will-change: auto !important;
+        }
     </style>
 </head>
 <body>
@@ -267,6 +277,10 @@
                 <div class="settings-row" id="rowTheme">
                     <div class="row-left"><div class="row-icon">🌙</div><div><div class="row-label">Темная тема</div><div class="row-sublabel">Экономия заряда</div></div></div>
                     <button class="toggle-switch" id="toggleTheme"></button>
+                </div>
+                <div class="settings-row" id="rowPerf">
+                    <div class="row-left"><div class="row-icon">🪫</div><div><div class="row-label">Для слабых устройств</div><div class="row-sublabel">Отключить все анимации</div></div></div>
+                    <button class="toggle-switch" id="togglePerf"></button>
                 </div>
             </div>
         </div>
@@ -490,6 +504,20 @@
         }
         setTheme(LS.get('luna_dark', false));
         document.getElementById('rowTheme').addEventListener('click', () => setTheme(!toggleTheme.classList.contains('active')));
+
+        // Режим для слабых устройств — отключает все анимации (класс low-power на <html>)
+        const togglePerf = document.getElementById('togglePerf');
+        function applyLowPower(on) {
+            document.documentElement.classList.toggle('low-power', on);
+            applyToggle(togglePerf, on);
+        }
+        let lowPower = LS.get('luna_lowpower', false);
+        applyLowPower(lowPower);
+        document.getElementById('rowPerf').addEventListener('click', () => {
+            lowPower = !lowPower;
+            applyLowPower(lowPower);
+            LS.set('luna_lowpower', lowPower);
+        });
 
         // ===== Старт: скрыть splash, отразить состояние, автоподключение =====
         window.addEventListener('DOMContentLoaded', () => {
