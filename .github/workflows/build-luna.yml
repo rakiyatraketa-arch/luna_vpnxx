@@ -72,6 +72,16 @@ jobs:
         fileName: 'libv2ray.aar'
         out-file-path: 'V2rayNG/app/libs'
 
+    - name: Download geo assets (geosite.dat + geoip.dat)
+      run: |
+        ASSETS=V2rayNG/app/src/main/assets
+        mkdir -p "$ASSETS"
+        curl -fsSL -o "$ASSETS/geoip.dat" \
+          https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+        curl -fsSL -o "$ASSETS/geosite.dat" \
+          https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+        ls -la "$ASSETS"/*.dat
+
     - name: Grant execute permission for gradlew
       run: chmod +x V2rayNG/gradlew
 

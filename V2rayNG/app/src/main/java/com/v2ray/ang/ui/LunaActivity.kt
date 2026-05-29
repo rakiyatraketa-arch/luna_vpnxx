@@ -71,6 +71,10 @@ class LunaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Копируем geosite.dat/geoip.dat из ассетов APK в рабочую папку ядра.
+        // Без них xray падает с "config error: geosite.dat no such file" на routing-правилах.
+        SettingsManager.initAssets(this, assets)
+
         webView = WebView(this)
         setContentView(webView)
         webView.settings.javaScriptEnabled = true

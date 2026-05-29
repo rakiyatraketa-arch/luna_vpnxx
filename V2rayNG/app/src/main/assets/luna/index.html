@@ -19,8 +19,8 @@
             --btn-bg: rgba(255, 255, 255, 0.15);
             --btn-text: #1a1a1e;
             --modal-bg: #ffffff;
-            --splash-bg: #212121;
-            --eclipse-shadow-bg: #212121;
+            --splash-bg: #ffffff;
+            --splash-text: #1a1a1e;
             --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.08);
             --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
             --connected: #10b981;
@@ -43,9 +43,7 @@
             --btn-text: #f9fafb;
             --modal-bg: #1f2937;
             --splash-bg: #111827;
-            --eclipse-shadow-bg: #111827;
-            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+            --splash-text: #f9fafb;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -66,9 +64,9 @@
         .app-container { position: relative; z-index: 1; width: 100vw; max-width: 440px; height: 100vh; height: 100dvh; background: var(--phone-bg); overflow: hidden; display: flex; flex-direction: column; transition: background var(--transition), padding var(--transition); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
         @media (min-width: 441px) { .app-container { height: 92vh; height: 92dvh; border-radius: 40px; box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.04); } }
         .custom-logo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-        .status-bar { padding: 16px 24px 8px; display: flex; justify-content: center; align-items: center; z-index: 5; position: relative; }
-        .status-bar .time { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.5px; }
-        [data-theme="light"] .splash-screen .time { color: #ffffff; }
+        .status-bar { padding: 16px 24px 8px; display: flex; justify-content: center; align-items: center; z-index: 105; position: relative; }
+        .status-bar .time { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.5px; transition: color var(--transition); }
+        .splash-active .status-bar .time { color: var(--splash-text); }
         .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 24px 24px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; position: relative; z-index: 2; }
         .app-content::-webkit-scrollbar { width: 0; }
         .app-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px 0 0; }
@@ -78,15 +76,12 @@
         .header-actions { display: flex; gap: 8px; }
         .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--card-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 16px; transition: all var(--transition); position: relative; overflow: hidden; }
         .icon-btn:active { transform: scale(0.9); background: var(--border); }
-        .splash-screen { position: absolute; inset: 0; z-index: 100; background: var(--splash-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.5s ease, visibility 0.5s ease, background var(--transition); pointer-events: all; }
+        .splash-screen { position: absolute; inset: 0; z-index: 100; background: var(--splash-bg); display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.4s ease, visibility 0.4s ease, background var(--transition); pointer-events: all; }
         .splash-screen.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
-        .splash-content { display: flex; flex-direction: column; align-items: center; gap: 36px; position: relative; width: 100%; }
-        .splash-logo { width: 80px; height: 80px; background: #ffffff; border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); position: relative; z-index: 2; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); }
-        .splash-title { font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 2; }
-        .loader-container { width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .loader { position: relative; height: 70px; width: 70px; border-radius: 50%; background-color: #e8e8e8; border: 3.5px solid #e8e8e8; box-shadow: 0 0 10px #e8e8e8; filter: blur(.4px); }
-        .shadow { position: absolute; height: 78px; width: 78px; border-radius: 50%; background-color: var(--eclipse-shadow-bg); top: -7.5px; left: -7.5px; animation: animate 3s infinite 1.5s cubic-bezier(0.4, 0, 0.2, 1); transition: background-color var(--transition); }
-        @keyframes animate { 0% { transform: translateX(110px); } 50% { transform: translateX(0px); } 100% { transform: translateX(-110px); } }
+        .splash-content { display: flex; flex-direction: column; align-items: center; gap: 20px; position: relative; width: 100%; }
+        .splash-logo { width: 96px; height: 96px; background: #ffffff; border-radius: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); position: relative; z-index: 2; overflow: hidden; border: 1px solid var(--border); }
+        [data-theme="dark"] .splash-logo { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .splash-title { font-size: 26px; font-weight: 700; color: var(--splash-text); letter-spacing: -0.6px; position: relative; z-index: 2; transition: color var(--transition); }
         .orb-container { position: relative; display: flex; align-items: center; justify-content: center; height: 260px; margin: auto 0; flex-shrink: 0; }
         .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; animation: particleFloat var(--dur) ease-in-out infinite; animation-delay: var(--delay); opacity: 0; }
         .particle:nth-child(1) { width: 6px; height: 6px; background: #3b82f6; --dur: 3.5s; --delay: 0s; top: 20%; left: 15%; --tx: 15px; --ty: -25px; }
@@ -166,14 +161,14 @@
     </style>
 </head>
 <body>
-    <div class="app-container">
+
+    <div class="app-container splash-active" id="appContainer">
         <div class="status-bar"><div class="time">09:41</div></div>
 
         <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
                 <div class="splash-logo"><img src="logo.png" alt="Logo" class="custom-logo"></div>
                 <div class="splash-title">Luna VPN</div>
-                <div class="loader-container"><div class="loader"><div class="shadow"></div></div></div>
             </div>
         </div>
 
@@ -246,17 +241,17 @@
         /**
          * Luna VPN — WebView UI поверх форка v2rayNG.
          * Реальный VLESS+Reality держит нативное ядро xray (через VpnService),
-         * а эта страница управляет им через мост window.LunaBridge (Kotlin).
-         * Состояние и IP приходят обратно через window.lunaOnState / window.lunaOnIp.
-         * Если моста нет (открыто в обычном браузере) — работает как макет.
+         * страница управляет им через мост window.LunaBridge (Kotlin).
+         * Состояние/IP приходят через window.lunaOnState / window.lunaOnIp.
+         * Без моста (обычный браузер) работает как макет.
          */
-
         const Bridge = window.LunaBridge || null;
 
-        // ===== Splash =====
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => document.getElementById('splashScreen')?.classList.add('hidden'), 2500);
-        });
+        // ===== Splash (чистый, 1.5с) =====
+        function hideSplash() {
+            document.getElementById('splashScreen')?.classList.add('hidden');
+            document.getElementById('appContainer')?.classList.remove('splash-active');
+        }
 
         const connectBtn = document.getElementById('connectBtn');
         const vpnOrb = document.getElementById('vpnOrb');
@@ -270,7 +265,7 @@
         let timerInterval = null;
         let statsInterval = null;
         let startTime = 0;
-        let prevTraffic = null;   // { rx, tx, t }
+        let prevTraffic = null;
         let connectTimeout = null;
 
         function fmtBytes(bps) {
@@ -287,12 +282,10 @@
             timerElement.textContent = `${h}:${m}:${s}`;
         }
 
-        // Реальный трафик устройства из TrafficStats (через мост)
         function pollTraffic() {
             if (!Bridge || !Bridge.getTraffic) return;
             try {
-                const raw = Bridge.getTraffic();           // "rx,tx" в байтах
-                const [rx, tx] = raw.split(',').map(Number);
+                const [rx, tx] = Bridge.getTraffic().split(',').map(Number);
                 const now = Date.now();
                 if (prevTraffic) {
                     const dt = (now - prevTraffic.t) / 1000 || 1;
@@ -304,7 +297,6 @@
             } catch (_) {}
         }
 
-        // Колбэк IP из Kotlin (ip-api.com через туннель)
         window.lunaOnIp = function (jsonStr) {
             try {
                 const info = JSON.parse(jsonStr);
@@ -312,9 +304,7 @@
                     const country = info.country || '';
                     const city = info.city || '';
                     ipInfo.textContent = `IP: ${info.query}` + (country ? `  •  ${country}${city ? ', ' + city : ''}` : '');
-                } else {
-                    ipInfo.textContent = 'IP: не удалось определить';
-                }
+                } else { ipInfo.textContent = 'IP: не удалось определить'; }
             } catch (_) { ipInfo.textContent = 'IP: ошибка проверки'; }
             ipInfo.style.display = 'block';
         };
@@ -333,8 +323,7 @@
 
         function uiConnected() {
             clearTimeout(connectTimeout);
-            isConnecting = false;
-            isConnected = true;
+            isConnecting = false; isConnected = true;
             connectBtn.classList.remove('connecting-state');
             connectBtn.classList.add('connected-state');
             vpnOrb.classList.remove('connecting');
@@ -343,7 +332,6 @@
             statusText.style.color = '#10b981';
             timerElement.classList.add('visible');
             dataUsage.style.display = 'block';
-
             startTime = Date.now();
             updateTimer();
             clearInterval(timerInterval);
@@ -351,7 +339,6 @@
             prevTraffic = null;
             clearInterval(statsInterval);
             statsInterval = setInterval(pollTraffic, 1500);
-
             ipInfo.textContent = 'Проверка IP…';
             ipInfo.style.display = 'block';
             if (Bridge && Bridge.requestIp) Bridge.requestIp();
@@ -359,8 +346,7 @@
 
         function uiDisconnected(statusMsg) {
             clearTimeout(connectTimeout);
-            isConnecting = false;
-            isConnected = false;
+            isConnecting = false; isConnected = false;
             connectBtn.classList.remove('connected-state', 'connecting-state');
             vpnOrb.classList.remove('connected', 'connecting');
             statusText.textContent = statusMsg || 'Disconnected';
@@ -375,7 +361,6 @@
             prevTraffic = null;
         }
 
-        // Колбэк состояния из Kotlin (MainViewModel.isRunning)
         window.lunaOnState = function (running) {
             if (running) { if (!isConnected) uiConnected(); }
             else { if (isConnected || isConnecting) uiDisconnected('Disconnected'); }
@@ -387,12 +372,8 @@
 
         function doConnect() {
             uiConnecting();
-            if (Bridge && Bridge.connect) {
-                Bridge.connect(currentCountryName());   // далее ждём window.lunaOnState(true)
-            } else {
-                // Браузер без моста — режим макета
-                setTimeout(() => uiConnected(), 1500);
-            }
+            if (Bridge && Bridge.connect) Bridge.connect(currentCountryName());
+            else setTimeout(() => uiConnected(), 1500);
         }
 
         function doDisconnect() {
@@ -402,8 +383,7 @@
 
         connectBtn.addEventListener('click', () => {
             if (isConnecting) return;
-            if (!isConnected) doConnect();
-            else doDisconnect();
+            if (!isConnected) doConnect(); else doDisconnect();
         });
 
         // ===== Выбор локации =====
@@ -423,7 +403,6 @@
                 dropdownContainer.classList.remove('dropdown-open');
                 currentFlag.textContent = item.dataset.flag;
                 currentCountry.textContent = item.dataset.country;
-
                 if (isConnected || isConnecting) {
                     serverLoader.classList.add('visible');
                     doDisconnect();
@@ -477,13 +456,13 @@
         setTheme(LS.get('luna_dark', false));
         document.getElementById('rowTheme').addEventListener('click', () => setTheme(!toggleTheme.classList.contains('active')));
 
-        // ===== Авто-подключение и синхронизация состояния после splash =====
+        // ===== Старт: скрыть splash, отразить состояние, автоподключение =====
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                // Если ядро уже запущено (вернулись в приложение) — отразить это
+                hideSplash();
                 if (Bridge && Bridge.isRunning && Bridge.isRunning()) { uiConnected(); return; }
                 if (autoConnect && !isConnected && !isConnecting) doConnect();
-            }, 2700);
+            }, 1500);
         });
     </script>
 </body>
