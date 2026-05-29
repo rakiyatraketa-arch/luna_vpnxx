@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.net.TrafficStats
 import android.net.VpnService
 import android.os.Bundle
+import android.view.View
 import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -77,9 +79,20 @@ class LunaActivity : AppCompatActivity() {
 
         webView = WebView(this)
         setContentView(webView)
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.mediaPlaybackRequiresUserGesture = false
+        // Снижаем накладные расходы рендеринга (вид не меняется):
+        webView.overScrollMode = View.OVER_SCROLL_NEVER       // без свечения при перетягивании
+        webView.isVerticalScrollBarEnabled = false
+        webView.isHorizontalScrollBarEnabled = false
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+            cacheMode = WebSettings.LOAD_DEFAULT              // кэш локальных ассетов
+            setSupportZoom(false)                             // зум не нужен — меньше обработчиков жестов
+            builtInZoomControls = false
+            displayZoomControls = false
+            textZoom = 100                                    // игнорируем системное масштабирование шрифта
+        }
         webView.addJavascriptInterface(LunaBridge(), "LunaBridge")
 
         // реальное состояние ядра -> в WebView

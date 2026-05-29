@@ -203,6 +203,14 @@
             animation: none !important;
             will-change: auto !important;
         }
+
+        /* Пауза всех анимаций, когда приложение свёрнуто (на экране не видно —
+           перестаём грузить GPU/CPU в фоне). Возобновляется при возврате. */
+        .app-paused *,
+        .app-paused *::before,
+        .app-paused *::after {
+            animation-play-state: paused !important;
+        }
     </style>
 </head>
 <body>
@@ -517,6 +525,23 @@
             lowPower = !lowPower;
             applyLowPower(lowPower);
             LS.set('luna_lowpower', lowPower);
+        });
+
+        // ===== Пауза в фоне: останавливаем анимации и опрос трафика =====
+        document.addEventListener('visibilitychange', () => {
+            const hidden = document.hidden;
+            document.documentElement.classList.toggle('app-paused', hidden);
+            if (hidden) {
+                clearInterval(timerInterval); timerInterval = null;
+                clearInterval(statsInterval); statsInterval = null;
+            } else if (isConnected) {
+                updateTimer();
+                clearInterval(timerInterval);
+                timerInterval = setInterval(updateTimer, 1000);
+                clearInterval(statsInterval);
+                prevTraffic = null;
+                statsInterval = setInterval(pollTraffic, 1500);
+            }
         });
 
         // ===== Старт: скрыть splash, отразить состояние, автоподключение =====
