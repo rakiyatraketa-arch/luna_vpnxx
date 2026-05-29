@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Luna VPN</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --phone-bg: #ffffff;
+            --text: #1a1a1e;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --accent: #3b82f6;
+            --border: #e5e7eb;
+            --card-bg: #f9fafb;
+            --orb-bg: rgba(255, 255, 255, 0.35);
+            --orb-border: rgba(255, 255, 255, 0.55);
+            --btn-bg: rgba(255, 255, 255, 0.15);
+            --btn-text: #1a1a1e;
+            --modal-bg: #ffffff;
+            --splash-bg: #212121;
+            --eclipse-shadow-bg: #212121;
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+            --connected: #10b981;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        [data-theme="dark"] {
+            --bg: #0b0f19;
+            --phone-bg: #111827;
+            --text: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-tertiary: #6b7280;
+            --accent: #3b82f6;
+            --border: #374151;
+            --card-bg: #1f2937;
+            --orb-bg: rgba(31, 41, 55, 0.4);
+            --orb-border: rgba(255, 255, 255, 0.15);
+            --btn-bg: rgba(255, 255, 255, 0.1);
+            --btn-text: #f9fafb;
+            --modal-bg: #1f2937;
+            --splash-bg: #111827;
+            --eclipse-shadow-bg: #111827;
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e8ecf1 0%, #dce1e8 25%, #eef1f5 50%, #e4e8ef 75%, #dde2e9 100%);
+            background-attachment: fixed;
+            min-height: 100vh; min-height: 100dvh;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+            overflow: hidden; transition: background var(--transition);
+        }
+        [data-theme="dark"] body { background: linear-gradient(135deg, #070a13 0%, #0f1424 50%, #0b0f19 100%); }
+        body::before { content: ''; position: fixed; top: -40%; left: -20%; width: 80%; height: 80%; background: radial-gradient(ellipse, rgba(59, 130, 246, 0.04) 0%, transparent 70%); pointer-events: none; z-index: 0; animation: bgBlob1 20s ease-in-out infinite; }
+        body::after { content: ''; position: fixed; bottom: -35%; right: -15%; width: 70%; height: 70%; background: radial-gradient(ellipse, rgba(16, 185, 129, 0.03) 0%, transparent 70%); pointer-events: none; z-index: 0; animation: bgBlob2 18s ease-in-out infinite; }
+        @keyframes bgBlob1 { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(8%, -5%) scale(1.08); } 50% { transform: translate(-3%, 3%) scale(0.94); } 75% { transform: translate(5%, 6%) scale(1.05); } }
+        @keyframes bgBlob2 { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(-6%, -4%) scale(1.1); } 66% { transform: translate(4%, -2%) scale(0.92); } }
+        .app-container { position: relative; z-index: 1; width: 100vw; max-width: 440px; height: 100vh; height: 100dvh; background: var(--phone-bg); overflow: hidden; display: flex; flex-direction: column; transition: background var(--transition), padding var(--transition); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+        @media (min-width: 441px) { .app-container { height: 92vh; height: 92dvh; border-radius: 40px; box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.04); } }
+        .custom-logo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+        .status-bar { padding: 16px 24px 8px; display: flex; justify-content: center; align-items: center; z-index: 5; position: relative; }
+        .status-bar .time { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.5px; }
+        [data-theme="light"] .splash-screen .time { color: #ffffff; }
+        .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 24px 24px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; position: relative; z-index: 2; }
+        .app-content::-webkit-scrollbar { width: 0; }
+        .app-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px 0 0; }
+        .app-logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { width: 38px; height: 38px; background: var(--modal-bg); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); overflow: hidden; border: 1px solid var(--border); transition: all var(--transition); }
+        .app-title { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
+        .header-actions { display: flex; gap: 8px; }
+        .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--card-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 16px; transition: all var(--transition); position: relative; overflow: hidden; }
+        .icon-btn:active { transform: scale(0.9); background: var(--border); }
+        .splash-screen { position: absolute; inset: 0; z-index: 100; background: var(--splash-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.5s ease, visibility 0.5s ease, background var(--transition); pointer-events: all; }
+        .splash-screen.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+        .splash-content { display: flex; flex-direction: column; align-items: center; gap: 36px; position: relative; width: 100%; }
+        .splash-logo { width: 80px; height: 80px; background: #ffffff; border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); position: relative; z-index: 2; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .splash-title { font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 2; }
+        .loader-container { width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .loader { position: relative; height: 70px; width: 70px; border-radius: 50%; background-color: #e8e8e8; border: 3.5px solid #e8e8e8; box-shadow: 0 0 10px #e8e8e8; filter: blur(.4px); }
+        .shadow { position: absolute; height: 78px; width: 78px; border-radius: 50%; background-color: var(--eclipse-shadow-bg); top: -7.5px; left: -7.5px; animation: animate 3s infinite 1.5s cubic-bezier(0.4, 0, 0.2, 1); transition: background-color var(--transition); }
+        @keyframes animate { 0% { transform: translateX(110px); } 50% { transform: translateX(0px); } 100% { transform: translateX(-110px); } }
+        .orb-container { position: relative; display: flex; align-items: center; justify-content: center; height: 260px; margin: auto 0; flex-shrink: 0; }
+        .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; animation: particleFloat var(--dur) ease-in-out infinite; animation-delay: var(--delay); opacity: 0; }
+        .particle:nth-child(1) { width: 6px; height: 6px; background: #3b82f6; --dur: 3.5s; --delay: 0s; top: 20%; left: 15%; --tx: 15px; --ty: -25px; }
+        .particle:nth-child(2) { width: 4px; height: 4px; background: #6366f1; --dur: 4s; --delay: 0.8s; top: 25%; right: 18%; --tx: -12px; --ty: -22px; }
+        .particle:nth-child(3) { width: 5px; height: 5px; background: #8b5cf6; --dur: 3.8s; --delay: 1.6s; bottom: 22%; left: 22%; --tx: 10px; --ty: -18px; }
+        .particle:nth-child(4) { width: 3px; height: 3px; background: #60a5fa; --dur: 4.2s; --delay: 2.2s; bottom: 20%; right: 20%; --tx: -14px; --ty: -20px; }
+        .particle:nth-child(5) { width: 5px; height: 5px; background: #a5b4fc; --dur: 3.3s; --delay: 0.4s; top: 40%; left: 8%; --tx: 8px; --ty: -28px; }
+        .particle:nth-child(6) { width: 4px; height: 4px; background: #3b82f6; --dur: 4.5s; --delay: 3s; top: 35%; right: 10%; --tx: -10px; --ty: -15px; }
+        @keyframes particleFloat { 0%, 100% { opacity: 0; transform: translate(0, 0) scale(0.5); } 15% { opacity: 0.7; } 30% { opacity: 0.9; transform: translate(var(--tx, 8px), var(--ty, -20px)) scale(1.3); } 60% { opacity: 0.4; transform: translate(calc(var(--tx, 8px) * -0.5), calc(var(--ty, -20px) * -1.5)) scale(0.8); } 85% { opacity: 0.1; } }
+        .liquid-glass-orb { position: relative; z-index: 1; width: 190px; height: 190px; border-radius: 50%; background: var(--orb-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1.5px solid var(--orb-border); box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -2px 8px rgba(0, 0, 0, 0.03), 0 0 0 8px rgba(255, 255, 255, 0.05), 0 0 0 20px rgba(255, 255, 255, 0.03), 0 0 0 36px rgba(255, 255, 255, 0.01); display: flex; align-items: center; justify-content: center; transition: all var(--transition-slow); animation: orbFloat 6s ease-in-out infinite; cursor: default; }
+        .liquid-glass-orb::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.15) 40deg, rgba(139, 92, 246, 0.1) 80deg, transparent 120deg, rgba(96, 165, 250, 0.12) 170deg, transparent 210deg, rgba(167, 139, 250, 0.08) 260deg, transparent 300deg, rgba(59, 130, 246, 0.1) 340deg, transparent 360deg); z-index: -1; animation: liquidSpin 8s linear infinite; filter: blur(8px); opacity: 0.7; }
+        .liquid-glass-orb::after { content: ''; position: absolute; inset: 15%; border-radius: 50%; background: radial-gradient(ellipse at 35% 30%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 60%); pointer-events: none; animation: lightShift 5s ease-in-out infinite; }
+        @keyframes orbFloat { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-8px); } 50% { transform: translateY(-3px); } 75% { transform: translateY(-10px); } }
+        @keyframes liquidSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes lightShift { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; } 30% { transform: translate(8px, -6px) scale(1.05); opacity: 1; } 60% { transform: translate(-4px, 4px) scale(0.95); opacity: 0.6; } 85% { transform: translate(3px, -2px) scale(1.02); opacity: 0.75; } }
+        .liquid-glass-orb.connecting { animation: orbFloat 6s ease-in-out infinite, orbPulse 0.8s ease-in-out infinite; border-color: rgba(96, 165, 250, 0.7); box-shadow: 0 8px 40px rgba(59, 130, 246, 0.2), 0 2px 8px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 8px rgba(59, 130, 246, 0.08), 0 0 0 8px rgba(59, 130, 246, 0.12), 0 0 0 20px rgba(59, 130, 246, 0.06), 0 0 0 36px rgba(59, 130, 246, 0.02), 0 0 80px rgba(59, 130, 246, 0.15); }
+        .liquid-glass-orb.connected { animation: orbFloat 6s ease-in-out infinite, orbPulseConnected 2s ease-in-out infinite; border-color: rgba(52, 211, 153, 0.6); box-shadow: 0 8px 40px rgba(16, 185, 129, 0.18), 0 2px 8px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 8px rgba(16, 185, 129, 0.06), 0 0 0 8px rgba(16, 185, 129, 0.1), 0 0 0 20px rgba(16, 185, 129, 0.05), 0 0 0 36px rgba(16, 185, 129, 0.02), 0 0 60px rgba(16, 185, 129, 0.12); }
+        @keyframes orbPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes orbPulseConnected { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
+        .connect-btn { position: relative; z-index: 2; width: 88px; height: 88px; border-radius: 50%; border: none; background: var(--btn-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--btn-text); font-size: 15px; font-weight: 700; letter-spacing: -0.3px; cursor: pointer; transition: all var(--transition-bounce), color var(--transition), background var(--transition); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); display: flex; align-items: center; justify-content: center; text-transform: uppercase; overflow: hidden; font-family: inherit; }
+        .connect-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.25); }
+        .connect-btn.connecting-state { background: rgba(59, 130, 246, 0.2); backdrop-filter: blur(14px); color: #fff; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3); }
+        .connect-btn.connected-state { background: rgba(16, 185, 129, 0.25); backdrop-filter: blur(14px); color: #10b981; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3); animation: btnBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        [data-theme="dark"] .connect-btn.connected-state { color: #34d399; }
+        .connect-btn .btn-text { position: relative; z-index: 1; transition: all 0.2s ease; }
+        .connect-btn .spinner { display: none; width: 24px; height: 24px; border: 2.5px solid rgba(0, 0, 0, 0.2); border-top-color: var(--btn-text); border-radius: 50%; animation: spin 0.7s linear infinite; position: absolute; }
+        .connect-btn.connecting-state .spinner { display: block; border-color: rgba(255, 255, 255, 0.3); border-top-color: #fff; }
+        .connect-btn.connecting-state .btn-text { opacity: 0; }
+        .connect-btn.connected-state .btn-text { font-size: 14px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes btnBounceIn { 0% { transform: scale(0.7); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+        .connection-info { text-align: center; min-height: 54px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .connection-status-text { font-size: 13px; font-weight: 500; color: var(--text-secondary); transition: color var(--transition); }
+        .connection-timer { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -1px; font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', monospace; opacity: 0; transform: translateY(6px); transition: all var(--transition), color var(--transition); }
+        .connection-timer.visible { opacity: 1; transform: translateY(0); }
+        .data-usage { font-size: 12px; color: var(--text-tertiary); transition: color var(--transition); }
+        .country-dropdown-container { width: 100%; margin-top: auto; position: relative; }
+        .dropdown-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-tertiary); margin-bottom: 6px; padding-left: 4px; transition: color var(--transition); }
+        .dropdown-trigger { display: flex; align-items: center; justify-content: space-between; background: var(--modal-bg); border: 1.5px solid var(--border); border-radius: 16px; padding: 12px 16px; cursor: pointer; transition: all var(--transition); font-size: 14px; font-weight: 600; color: var(--text); }
+        .dropdown-trigger:active { background: var(--card-bg); }
+        .trigger-left { display: flex; align-items: center; gap: 10px; }
+        .trigger-flag { font-size: 22px; }
+        .trigger-chevron { font-size: 14px; color: var(--text-tertiary); transition: transform 0.3s ease, color var(--transition); }
+        .dropdown-open .trigger-chevron { transform: rotate(180deg); }
+        .dropdown-list { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--modal-bg); border-radius: 16px; margin-bottom: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; z-index: 15; max-height: 0; opacity: 0; pointer-events: none; transition: max-height 0.35s ease, opacity 0.25s ease, background var(--transition), border var(--transition); }
+        .dropdown-open .dropdown-list { max-height: 240px; opacity: 1; pointer-events: auto; }
+        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s, color var(--transition); font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+        .dropdown-item:hover { background: var(--card-bg); }
+        .dropdown-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); font-weight: 600; }
+        .item-flag { font-size: 20px; }
+        .item-ping { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
+        .server-loader { display: flex; justify-content: center; align-items: center; height: 20px; margin-top: 6px; opacity: 0; transition: opacity 0.3s ease; }
+        .server-loader.visible { opacity: 1; }
+        .loader-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin: 0 3px; animation: dotPulse 1.2s ease-in-out infinite; }
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.2); } }
+        .settings-modal { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .settings-modal.open { opacity: 1; pointer-events: auto; }
+        .settings-panel { width: 100%; max-height: 75%; background: var(--modal-bg); border-radius: 28px 28px 0 0; padding: 24px 20px calc(30px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background var(--transition); border-top: 1px solid var(--border); }
+        .settings-modal.open .settings-panel { transform: translateY(0); }
+        .settings-panel::-webkit-scrollbar { width: 0; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 20px; font-weight: 700; color: var(--text); }
+        .close-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--card-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-secondary); transition: all var(--transition); }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: border var(--transition); }
+        .settings-row:last-child { border-bottom: none; }
+        .row-left { display: flex; align-items: center; gap: 12px; }
+        .row-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; background: var(--card-bg); border: 1px solid var(--border); transition: all var(--transition); }
+        .row-label { font-size: 14px; font-weight: 600; color: var(--text); transition: color var(--transition); }
+        .row-sublabel { font-size: 11px; color: var(--text-tertiary); transition: color var(--transition); }
+        .toggle-switch { position: relative; width: 48px; height: 28px; background: #d1d5db; border-radius: 28px; cursor: pointer; transition: all var(--transition); flex-shrink: 0; border: none; outline: none; }
+        [data-theme="dark"] .toggle-switch { background: #4b5563; }
+        .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; background: #fff; border-radius: 50%; transition: all var(--transition-bounce); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
+        .toggle-switch.active { background: #10b981; }
+        .toggle-switch.active::after { left: 23px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="status-bar"><div class="time">09:41</div></div>
+
+        <div class="splash-screen" id="splashScreen">
+            <div class="splash-content">
+                <div class="splash-logo"><img src="https://i.ibb.co/7P1zng6/image.png" alt="Logo" class="custom-logo"></div>
+                <div class="splash-title">Luna VPN</div>
+                <div class="loader-container"><div class="loader"><div class="shadow"></div></div></div>
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="app-header">
+                <div class="app-logo">
+                    <div class="logo-icon"><img src="https://i.ibb.co/7P1zng6/image.png" alt="Logo" class="custom-logo"></div>
+                    <div class="app-title">Luna VPN</div>
+                </div>
+                <div class="header-actions"><button class="icon-btn" id="settingsBtn">⚙️</button></div>
+            </div>
+
+            <div class="orb-container">
+                <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+                <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+                <div class="liquid-glass-orb" id="vpnOrb">
+                    <button class="connect-btn" id="connectBtn">
+                        <span class="spinner"></span>
+                        <span class="btn-text">Start</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-info">
+                <span class="connection-status-text" id="statusText">Disconnected</span>
+                <span class="connection-timer" id="timer">00:00:00</span>
+                <span class="data-usage" id="dataUsage" style="display: none;">↓ 0.0 KB/s  ↑ 0.0 KB/s</span>
+                <span class="data-usage" id="ipInfo" style="display: none;"></span>
+            </div>
+
+            <div class="country-dropdown-container">
+                <div class="dropdown-label">Выбор локации</div>
+                <div class="dropdown-trigger" id="dropdownTrigger">
+                    <div class="trigger-left">
+                        <span class="trigger-flag" id="currentFlag">🇩🇪</span>
+                        <span id="currentCountry">Германия (Быстрый)</span>
+                    </div>
+                    <span class="trigger-chevron">▼</span>
+                </div>
+                <div class="dropdown-list" id="dropdownList">
+                    <div class="dropdown-item active" data-country="Германия (Быстрый)" data-flag="🇩🇪" data-ping="24 ms"><span class="item-flag">🇩🇪</span> Германия (Быстрый) <span class="item-ping">24 ms</span></div>
+                    <div class="dropdown-item" data-country="Нидерланды" data-flag="🇳🇱" data-ping="31 ms"><span class="item-flag">🇳🇱</span> Нидерланды <span class="item-ping">31 ms</span></div>
+                    <div class="dropdown-item" data-country="США (Нью-Йорк)" data-flag="🇺🇸" data-ping="112 ms"><span class="item-flag">🇺🇸</span> США (Нью-Йорк) <span class="item-ping">112 ms</span></div>
+                    <div class="dropdown-item" data-country="Сингапур" data-flag="🇸🇬" data-ping="185 ms"><span class="item-flag">🇸🇬</span> Сингапур <span class="item-ping">185 ms</span></div>
+                </div>
+                <div class="server-loader" id="serverLoader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>
+            </div>
+        </div>
+
+        <div class="settings-modal" id="settingsModal">
+            <div class="settings-panel">
+                <div class="panel-header"><div class="panel-title">Настройки</div><button class="close-btn" id="closeSettings">✕</button></div>
+                <div class="settings-row" id="rowKillSwitch">
+                    <div class="row-left"><div class="row-icon">🛡️</div><div><div class="row-label">Kill Switch</div><div class="row-sublabel">Блокировать трафик при обрыве</div></div></div>
+                    <button class="toggle-switch" id="toggleKillSwitch"></button>
+                </div>
+                <div class="settings-row" id="rowAutoConnect">
+                    <div class="row-left"><div class="row-icon">⚡</div><div><div class="row-label">Быстрое подключение</div><div class="row-sublabel">Автостарт при запуске</div></div></div>
+                    <button class="toggle-switch active" id="toggleAutoConnect"></button>
+                </div>
+                <div class="settings-row" id="rowTheme">
+                    <div class="row-left"><div class="row-icon">🌙</div><div><div class="row-label">Темная тема</div><div class="row-sublabel">Экономия заряда</div></div></div>
+                    <button class="toggle-switch" id="toggleTheme"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Luna VPN — WebView UI поверх форка v2rayNG.
+         * Реальный VLESS+Reality держит нативное ядро xray (через VpnService),
+         * а эта страница управляет им через мост window.LunaBridge (Kotlin).
+         * Состояние и IP приходят обратно через window.lunaOnState / window.lunaOnIp.
+         * Если моста нет (открыто в обычном браузере) — работает как макет.
+         */
+
+        const Bridge = window.LunaBridge || null;
+
+        // ===== Splash =====
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => document.getElementById('splashScreen')?.classList.add('hidden'), 2500);
+        });
+
+        const connectBtn = document.getElementById('connectBtn');
+        const vpnOrb = document.getElementById('vpnOrb');
+        const statusText = document.getElementById('statusText');
+        const timerElement = document.getElementById('timer');
+        const dataUsage = document.getElementById('dataUsage');
+        const ipInfo = document.getElementById('ipInfo');
+
+        let isConnected = false;
+        let isConnecting = false;
+        let timerInterval = null;
+        let statsInterval = null;
+        let startTime = 0;
+        let prevTraffic = null;   // { rx, tx, t }
+        let connectTimeout = null;
+
+        function fmtBytes(bps) {
+            if (bps >= 1024 * 1024) return (bps / 1024 / 1024).toFixed(1) + ' MB/s';
+            if (bps >= 1024) return (bps / 1024).toFixed(1) + ' KB/s';
+            return Math.max(0, Math.round(bps)) + ' B/s';
+        }
+
+        function updateTimer() {
+            const sec = Math.floor((Date.now() - startTime) / 1000);
+            const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+            const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            timerElement.textContent = `${h}:${m}:${s}`;
+        }
+
+        // Реальный трафик устройства из TrafficStats (через мост)
+        function pollTraffic() {
+            if (!Bridge || !Bridge.getTraffic) return;
+            try {
+                const raw = Bridge.getTraffic();           // "rx,tx" в байтах
+                const [rx, tx] = raw.split(',').map(Number);
+                const now = Date.now();
+                if (prevTraffic) {
+                    const dt = (now - prevTraffic.t) / 1000 || 1;
+                    const dDown = Math.max(0, rx - prevTraffic.rx) / dt;
+                    const dUp = Math.max(0, tx - prevTraffic.tx) / dt;
+                    dataUsage.textContent = `↓ ${fmtBytes(dDown)}  ↑ ${fmtBytes(dUp)}`;
+                }
+                prevTraffic = { rx, tx, t: now };
+            } catch (_) {}
+        }
+
+        // Колбэк IP из Kotlin (ip-api.com через туннель)
+        window.lunaOnIp = function (jsonStr) {
+            try {
+                const info = JSON.parse(jsonStr);
+                if (info && info.query) {
+                    const country = info.country || '';
+                    const city = info.city || '';
+                    ipInfo.textContent = `IP: ${info.query}` + (country ? `  •  ${country}${city ? ', ' + city : ''}` : '');
+                } else {
+                    ipInfo.textContent = 'IP: не удалось определить';
+                }
+            } catch (_) { ipInfo.textContent = 'IP: ошибка проверки'; }
+            ipInfo.style.display = 'block';
+        };
+
+        function uiConnecting() {
+            isConnecting = true;
+            connectBtn.classList.add('connecting-state');
+            vpnOrb.classList.add('connecting');
+            statusText.textContent = 'Connecting...';
+            statusText.style.color = 'var(--text-secondary)';
+            clearTimeout(connectTimeout);
+            connectTimeout = setTimeout(() => {
+                if (isConnecting && !isConnected) uiDisconnected('Error: таймаут подключения');
+            }, 20000);
+        }
+
+        function uiConnected() {
+            clearTimeout(connectTimeout);
+            isConnecting = false;
+            isConnected = true;
+            connectBtn.classList.remove('connecting-state');
+            connectBtn.classList.add('connected-state');
+            vpnOrb.classList.remove('connecting');
+            vpnOrb.classList.add('connected');
+            statusText.textContent = 'Connected';
+            statusText.style.color = '#10b981';
+            timerElement.classList.add('visible');
+            dataUsage.style.display = 'block';
+
+            startTime = Date.now();
+            updateTimer();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            prevTraffic = null;
+            clearInterval(statsInterval);
+            statsInterval = setInterval(pollTraffic, 1500);
+
+            ipInfo.textContent = 'Проверка IP…';
+            ipInfo.style.display = 'block';
+            if (Bridge && Bridge.requestIp) Bridge.requestIp();
+        }
+
+        function uiDisconnected(statusMsg) {
+            clearTimeout(connectTimeout);
+            isConnecting = false;
+            isConnected = false;
+            connectBtn.classList.remove('connected-state', 'connecting-state');
+            vpnOrb.classList.remove('connected', 'connecting');
+            statusText.textContent = statusMsg || 'Disconnected';
+            statusText.style.color = 'var(--text-secondary)';
+            timerElement.classList.remove('visible');
+            timerElement.textContent = '00:00:00';
+            dataUsage.style.display = 'none';
+            ipInfo.style.display = 'none';
+            ipInfo.textContent = '';
+            clearInterval(timerInterval);
+            clearInterval(statsInterval);
+            prevTraffic = null;
+        }
+
+        // Колбэк состояния из Kotlin (MainViewModel.isRunning)
+        window.lunaOnState = function (running) {
+            if (running) { if (!isConnected) uiConnected(); }
+            else { if (isConnected || isConnecting) uiDisconnected('Disconnected'); }
+        };
+
+        function currentCountryName() {
+            return document.getElementById('currentCountry').textContent.trim();
+        }
+
+        function doConnect() {
+            uiConnecting();
+            if (Bridge && Bridge.connect) {
+                Bridge.connect(currentCountryName());   // далее ждём window.lunaOnState(true)
+            } else {
+                // Браузер без моста — режим макета
+                setTimeout(() => uiConnected(), 1500);
+            }
+        }
+
+        function doDisconnect() {
+            if (Bridge && Bridge.disconnect) Bridge.disconnect();
+            uiDisconnected('Disconnected');
+        }
+
+        connectBtn.addEventListener('click', () => {
+            if (isConnecting) return;
+            if (!isConnected) doConnect();
+            else doDisconnect();
+        });
+
+        // ===== Выбор локации =====
+        const dropdownTrigger = document.getElementById('dropdownTrigger');
+        const dropdownContainer = document.querySelector('.country-dropdown-container');
+        const dropdownItems = document.querySelectorAll('.dropdown-item');
+        const currentFlag = document.getElementById('currentFlag');
+        const currentCountry = document.getElementById('currentCountry');
+        const serverLoader = document.getElementById('serverLoader');
+
+        dropdownTrigger.addEventListener('click', () => dropdownContainer.classList.toggle('dropdown-open'));
+
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', () => {
+                dropdownItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                dropdownContainer.classList.remove('dropdown-open');
+                currentFlag.textContent = item.dataset.flag;
+                currentCountry.textContent = item.dataset.country;
+
+                if (isConnected || isConnecting) {
+                    serverLoader.classList.add('visible');
+                    doDisconnect();
+                    setTimeout(() => {
+                        doConnect();
+                        setTimeout(() => serverLoader.classList.remove('visible'), 800);
+                    }, 600);
+                }
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownContainer.contains(e.target)) dropdownContainer.classList.remove('dropdown-open');
+        });
+
+        // ===== Настройки =====
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettings = document.getElementById('closeSettings');
+        settingsBtn.addEventListener('click', () => settingsModal.classList.add('open'));
+        closeSettings.addEventListener('click', () => settingsModal.classList.remove('open'));
+        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('open'); });
+
+        const toggleKillSwitch = document.getElementById('toggleKillSwitch');
+        const toggleAutoConnect = document.getElementById('toggleAutoConnect');
+        const toggleTheme = document.getElementById('toggleTheme');
+
+        const LS = {
+            get: (k, def) => { const v = localStorage.getItem(k); return v === null ? def : v === 'true'; },
+            set: (k, v) => localStorage.setItem(k, v ? 'true' : 'false')
+        };
+        function applyToggle(el, on) { el.classList.toggle('active', on); }
+
+        let killSwitch = LS.get('luna_killswitch', false);
+        applyToggle(toggleKillSwitch, killSwitch);
+        document.getElementById('rowKillSwitch').addEventListener('click', () => {
+            killSwitch = !killSwitch; applyToggle(toggleKillSwitch, killSwitch); LS.set('luna_killswitch', killSwitch);
+        });
+
+        let autoConnect = LS.get('luna_autoconnect', true);
+        applyToggle(toggleAutoConnect, autoConnect);
+        document.getElementById('rowAutoConnect').addEventListener('click', () => {
+            autoConnect = !autoConnect; applyToggle(toggleAutoConnect, autoConnect); LS.set('luna_autoconnect', autoConnect);
+        });
+
+        function setTheme(isDark) {
+            if (isDark) { document.documentElement.setAttribute('data-theme', 'dark'); toggleTheme.classList.add('active'); }
+            else { document.documentElement.removeAttribute('data-theme'); toggleTheme.classList.remove('active'); }
+            LS.set('luna_dark', isDark);
+        }
+        setTheme(LS.get('luna_dark', false));
+        document.getElementById('rowTheme').addEventListener('click', () => setTheme(!toggleTheme.classList.contains('active')));
+
+        // ===== Авто-подключение и синхронизация состояния после splash =====
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                // Если ядро уже запущено (вернулись в приложение) — отразить это
+                if (Bridge && Bridge.isRunning && Bridge.isRunning()) { uiConnected(); return; }
+                if (autoConnect && !isConnected && !isConnecting) doConnect();
+            }, 2700);
+        });
+    </script>
+</body>
+</html>
