@@ -38,7 +38,7 @@ class LunaActivity : AppCompatActivity() {
 
     companion object {
         private const val DEFAULT_LINK =
-            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?type=tcp&encryption=none&security=reality&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&fp=chrome&sni=www.max.ru&sid=74&spx=%2F&flow=xtls-rprx-vision#vless%20filnlad-BY%20ZYNNC"
+            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?security=reality&encryption=none&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=www.max.ru&sid=74#dasd"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
