@@ -23,6 +23,22 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Get AndroidLibXrayLite version
+      id: get-version
+      run: |
+        cd v2rayNG/AndroidLibXrayLite
+        XRAY_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "2.0.0")
+        echo "XRAY_TAG=$XRAY_TAG" >> $GITHUB_ENV
+        echo "Using AndroidLibXrayLite tag: $XRAY_TAG"
+
+    - name: Download libv2ray.aar
+      uses: robinraju/release-downloader@v1.11
+      with:
+        repository: '2dust/AndroidLibXrayLite'
+        tag: ${{ env.XRAY_TAG }}
+        fileName: 'libv2ray.aar'
+        out-file-path: v2rayNG/V2rayNG/app/libs/
+
     - name: Grant execute permission for gradlew
       run: |
         cd v2rayNG/V2rayNG
