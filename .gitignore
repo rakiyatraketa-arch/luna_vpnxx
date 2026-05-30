@@ -1,0 +1,55 @@
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+captures/
+.externalNativeBuild
+.cxx
+
+# Gradle
+.gradle
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Node.js (для веб-версии)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.keystore
+*.jks
+keystore.properties
+
+# Temporary
+*.tmp
+*.temp
+*.swp
+*~
+
+# Xray binaries
+xray
+xray.exe
+.xray-config.json
