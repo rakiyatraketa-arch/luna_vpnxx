@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -23,19 +25,10 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Check directory structure
+    - name: Initialize submodules
       run: |
-        echo "=== Root directory ==="
-        ls -la
-        echo ""
-        echo "=== v2rayNG directory ==="
-        ls -la v2rayNG/ || echo "v2rayNG not found"
-        echo ""
-        echo "=== v2rayNG/V2rayNG directory ==="
-        ls -la v2rayNG/V2rayNG/ || echo "v2rayNG/V2rayNG not found"
-        echo ""
-        echo "=== Looking for gradlew ==="
-        find . -name "gradlew" -type f || echo "gradlew not found"
+        cd v2rayNG
+        git submodule update --init --recursive || echo "No submodules or already initialized"
 
     - name: Grant execute permission for gradlew
       run: |
@@ -45,13 +38,7 @@ jobs:
     - name: Build Debug APK
       run: |
         cd v2rayNG/V2rayNG
-        ./gradlew assembleDebug --stacktrace --info
-
-    - name: Build Release APK (unsigned)
-      run: |
-        cd v2rayNG/V2rayNG
-        ./gradlew assembleRelease --stacktrace
-      continue-on-error: true
+        ./gradlew assembleDebug --stacktrace
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
@@ -59,6 +46,12 @@ jobs:
         name: luna-vpn-debug
         path: v2rayNG/V2rayNG/app/build/outputs/apk/debug/*.apk
         retention-days: 30
+
+    - name: Build Release APK
+      run: |
+        cd v2rayNG/V2rayNG
+        ./gradlew assembleRelease --stacktrace
+      continue-on-error: true
 
     - name: Upload Release APK
       uses: actions/upload-artifact@v4
@@ -69,11 +62,8 @@ jobs:
         retention-days: 30
       continue-on-error: true
 
-    - name: Get APK info
+    - name: List APK files
+      if: always()
       run: |
-        echo "=== Build completed ==="
-        echo "Debug APK:"
-        ls -lh v2rayNG/V2rayNG/app/build/outputs/apk/debug/*.apk || echo "No debug APK found"
-        echo ""
-        echo "Release APK:"
-        ls -lh v2rayNG/V2rayNG/app/build/outputs/apk/release/*.apk || echo "No release APK found"
+        echo "=== APK files ==="
+        find v2rayNG -name "*.apk" -type f || echo "No APK found"
