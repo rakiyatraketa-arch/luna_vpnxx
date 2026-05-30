@@ -45,7 +45,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: luna-vpn-debug
-        path: v2rayNG/V2rayNG/app/build/outputs/apk/debug/*.apk
+        path: v2rayNG/V2rayNG/app/build/outputs/apk/fdroid/debug/*.apk
         retention-days: 30
 
     - name: Build Release APK
@@ -59,7 +59,7 @@ jobs:
       if: success()
       with:
         name: luna-vpn-release
-        path: v2rayNG/V2rayNG/app/build/outputs/apk/release/*.apk
+        path: v2rayNG/V2rayNG/app/build/outputs/apk/fdroid/release/*.apk
         retention-days: 30
       continue-on-error: true
 
