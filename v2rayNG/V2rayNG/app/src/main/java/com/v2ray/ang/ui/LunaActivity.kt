@@ -40,15 +40,35 @@ import java.net.URL
 class LunaActivity : AppCompatActivity() {
 
     companion object {
-        private const val DEFAULT_LINK =
-            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?security=reality&encryption=none&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=www.max.ru&sid=74#Finland"
+        // VLESS ключи для разных стран
+        private const val SWEDEN_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@sw.motion-vpn.com:443?security=reality&encryption=none&pbk=8fymhqg_KSIkmSj-j-T-5OAsF7MbwAFrr8EoiXPKGkg&headerType=none&fp=chrome&spx=%2F&type=tcp&flow=xtls-rprx-vision&sni=sw.motion-vpn.com#Sweden"
+
+        private const val NETHERLANDS_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@nl.motion-vpn.com:443?security=reality&encryption=none&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=nl.motion-vpn.com#Netherlands"
+
+        private const val GERMANY_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@de.motion-vpn.com:443?security=reality&encryption=none&pbk=KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=de.motion-vpn.com#Germany"
+
+        private const val POLAND_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@pl.motion-vpn.com:443?security=reality&encryption=none&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=pl.motion-vpn.com#Poland"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
-            "Финляндия" to DEFAULT_LINK
+            "Швеция" to SWEDEN_LINK,
+            "Нидерланды" to NETHERLANDS_LINK,
+            "Германия" to GERMANY_LINK,
+            "Польша" to POLAND_LINK
         )
 
-        private const val PING_HOST = "finlandbox.space"
+        // Хосты для пинга (извлечены из VLESS ссылок)
+        private val PING_HOSTS = mapOf(
+            "Швеция" to "sw.motion-vpn.com",
+            "Нидерланды" to "nl.motion-vpn.com",
+            "Германия" to "de.motion-vpn.com",
+            "Польша" to "pl.motion-vpn.com"
+        )
+
         private const val PING_PORT = 443
         private const val IP_CHECK_URL = "http://ip-api.com/json"
     }
@@ -225,10 +245,11 @@ class LunaActivity : AppCompatActivity() {
     /** Измерение пинга до сервера */
     private fun measurePing(country: String) {
         lifecycleScope.launch(Dispatchers.IO) {
+            val host = PING_HOSTS[country] ?: return@launch
             val ping = try {
                 val startTime = System.currentTimeMillis()
                 java.net.Socket().use { socket ->
-                    socket.connect(java.net.InetSocketAddress(PING_HOST, PING_PORT), 5000)
+                    socket.connect(java.net.InetSocketAddress(host, PING_PORT), 5000)
                 }
                 val endTime = System.currentTimeMillis()
                 (endTime - startTime).toInt()
