@@ -139,32 +139,35 @@ class LunaActivity : AppCompatActivity() {
         try {
             val existing = MmkvManager.decodeServerList("")
 
-            // Удаляем все серверы кроме VLESS (Финляндия)
+            // Удаляем все серверы кроме VLESS с motion-vpn.com
             if (existing.isNotEmpty()) {
                 val toKeep = mutableListOf<String>()
                 for (guid in existing) {
                     val config = MmkvManager.decodeServerConfig(guid)
-                    // Оставляем только VLESS конфигурации с finlandbox.space
+                    // Оставляем только VLESS конфигурации с motion-vpn.com
                     if (config != null &&
                         config.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
-                        config.server?.contains("finlandbox.space") == true) {
+                        config.server?.contains("motion-vpn.com") == true) {
                         toKeep.add(guid)
+                        // Мапим по хосту
+                        SERVERS.forEach { (country, _) ->
+                            val host = PING_HOSTS[country]
+                            if (config.server == host) {
+                                guidMap[country] = guid
+                            }
+                        }
                     } else {
                         // Удаляем лишние конфигурации
                         MmkvManager.removeServer(guid)
                     }
                 }
 
-                // Если не осталось нужных серверов, импортируем заново
-                if (toKeep.isEmpty()) {
+                // Если не хватает серверов, импортируем недостающие
+                if (guidMap.size < SERVERS.size) {
                     importDefaultServer()
-                } else {
-                    // Мапим существующий сервер на все локации
-                    val mainGuid = toKeep.first()
-                    SERVERS.keys.forEach { name -> guidMap[name] = mainGuid }
                 }
             } else {
-                // Нет серверов - импортируем дефолтный
+                // Нет серверов - импортируем все
                 importDefaultServer()
             }
         } catch (e: Exception) {
@@ -172,15 +175,18 @@ class LunaActivity : AppCompatActivity() {
         }
     }
 
-    /** Импортирует только дефолтный VLESS сервер Финляндии */
+    /** Импортирует все VLESS серверы */
     private fun importDefaultServer() {
         try {
             val before = MmkvManager.decodeServerList("").toSet()
-            AngConfigManager.importBatchConfig(DEFAULT_LINK, "", false)
-            val guid = MmkvManager.decodeServerList("").firstOrNull { it !in before } ?: ""
-            if (guid.isNotEmpty()) {
-                // Мапим один сервер на все локации
-                SERVERS.keys.forEach { name -> guidMap[name] = guid }
+
+            // Импортируем все серверы
+            SERVERS.forEach { (country, link) ->
+                AngConfigManager.importBatchConfig(link, "", false)
+                val newGuids = MmkvManager.decodeServerList("").filter { it !in before }
+                if (newGuids.isNotEmpty()) {
+                    guidMap[country] = newGuids.last()
+                }
             }
         } catch (e: Exception) {
             // игнорируем ошибки импорта
