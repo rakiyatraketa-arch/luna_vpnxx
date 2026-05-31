@@ -41,16 +41,15 @@ class LunaActivity : AppCompatActivity() {
 
     companion object {
         private const val DEFAULT_LINK =
-            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?security=reality&encryption=none&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=www.max.ru&sid=74#dasd"
+            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?security=reality&encryption=none&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=www.max.ru&sid=74#Finland"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
-            "Германия (Быстрый)" to DEFAULT_LINK,
-            "Нидерланды" to DEFAULT_LINK,        // ← подставь свой линк для NL
-            "США (Нью-Йорк)" to DEFAULT_LINK,    // ← подставь свой линк для US
-            "Сингапур" to DEFAULT_LINK,          // ← подставь свой линк для SG
+            "Финляндия" to DEFAULT_LINK
         )
 
+        private const val PING_HOST = "finlandbox.space"
+        private const val PING_PORT = 443
         private const val IP_CHECK_URL = "http://ip-api.com/json"
     }
 
@@ -223,6 +222,25 @@ class LunaActivity : AppCompatActivity() {
         }
     }
 
+    /** Измерение пинга до сервера */
+    private fun measurePing(country: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val ping = try {
+                val startTime = System.currentTimeMillis()
+                java.net.Socket().use { socket ->
+                    socket.connect(java.net.InetSocketAddress(PING_HOST, PING_PORT), 5000)
+                }
+                val endTime = System.currentTimeMillis()
+                (endTime - startTime).toInt()
+            } catch (e: Exception) {
+                -1 // ошибка подключения
+            }
+            withContext(Dispatchers.Main) {
+                webView.evaluateJavascript("window.lunaOnPing && window.lunaOnPing('$country', $ping)", null)
+            }
+        }
+    }
+
     /** Проверка внешнего IP через уже поднятый туннель (трафик приложения тоже идёт в tun). */
     private fun fetchIp() {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -308,6 +326,11 @@ class LunaActivity : AppCompatActivity() {
         @JavascriptInterface
         fun requestIp() {
             fetchIp()
+        }
+
+        @JavascriptInterface
+        fun requestPing(country: String) {
+            measurePing(country)
         }
     }
 }

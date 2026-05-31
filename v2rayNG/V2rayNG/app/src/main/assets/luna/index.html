@@ -273,16 +273,13 @@
                 <div class="dropdown-label">Выбор локации</div>
                 <div class="dropdown-trigger" id="dropdownTrigger">
                     <div class="trigger-left">
-                        <span class="trigger-flag" id="currentFlag">🇩🇪</span>
-                        <span id="currentCountry">Германия (Быстрый)</span>
+                        <span class="trigger-flag" id="currentFlag">🇫🇮</span>
+                        <span id="currentCountry">Финляндия</span>
                     </div>
                     <span class="trigger-chevron">▼</span>
                 </div>
                 <div class="dropdown-list" id="dropdownList">
-                    <div class="dropdown-item active" data-country="Германия (Быстрый)" data-flag="🇩🇪" data-ping="24 ms"><span class="item-flag">🇩🇪</span> Германия (Быстрый) <span class="item-ping">24 ms</span></div>
-                    <div class="dropdown-item" data-country="Нидерланды" data-flag="🇳🇱" data-ping="31 ms"><span class="item-flag">🇳🇱</span> Нидерланды <span class="item-ping">31 ms</span></div>
-                    <div class="dropdown-item" data-country="США (Нью-Йорк)" data-flag="🇺🇸" data-ping="112 ms"><span class="item-flag">🇺🇸</span> США (Нью-Йорк) <span class="item-ping">112 ms</span></div>
-                    <div class="dropdown-item" data-country="Сингапур" data-flag="🇸🇬" data-ping="185 ms"><span class="item-flag">🇸🇬</span> Сингапур <span class="item-ping">185 ms</span></div>
+                    <div class="dropdown-item active" data-country="Финляндия" data-flag="🇫🇮" data-ping="..."><span class="item-flag">🇫🇮</span> Финляндия <span class="item-ping">...</span></div>
                 </div>
                 <div class="server-loader" id="serverLoader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>
             </div>
@@ -580,6 +577,41 @@
                 if (autoConnect && !isConnected && !isConnecting) doConnect();
             }, 5000);
         });
+
+        // ===== Автоматический пинг =====
+        window.lunaOnPing = function(country, ping) {
+            const items = document.querySelectorAll('.dropdown-item');
+            items.forEach(item => {
+                if (item.dataset.country === country) {
+                    const pingSpan = item.querySelector('.item-ping');
+                    if (pingSpan) {
+                        if (ping > 0) {
+                            pingSpan.textContent = ping + ' ms';
+                        } else {
+                            pingSpan.textContent = 'N/A';
+                        }
+                    }
+                }
+            });
+        };
+
+        // Запускаем измерение пинга при загрузке и каждые 30 секунд
+        function measureAllPings() {
+            const items = document.querySelectorAll('.dropdown-item');
+            items.forEach(item => {
+                const country = item.dataset.country;
+                if (Bridge && Bridge.requestPing) {
+                    Bridge.requestPing(country);
+                }
+            });
+        }
+
+        // Первое измерение через 2 секунды после загрузки
+        setTimeout(() => {
+            measureAllPings();
+            // Повторяем каждые 30 секунд
+            setInterval(measureAllPings, 30000);
+        }, 2000);
     </script>
 </body>
 </html>
