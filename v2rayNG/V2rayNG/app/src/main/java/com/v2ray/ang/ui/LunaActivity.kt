@@ -41,31 +41,21 @@ class LunaActivity : AppCompatActivity() {
 
     companion object {
         // VLESS ключи для разных стран
-        private const val SWEDEN_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@sw.motion-vpn.com:443?security=reality&encryption=none&pbk=8fymhqg_KSIkmSj-j-T-5OAsF7MbwAFrr8EoiXPKGkg&headerType=none&fp=chrome&spx=%2F&type=tcp&flow=xtls-rprx-vision&sni=sw.motion-vpn.com#Sweden"
-
-        private const val NETHERLANDS_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@nl.motion-vpn.com:443?security=reality&encryption=none&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=nl.motion-vpn.com#Netherlands"
-
-        private const val GERMANY_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@de.motion-vpn.com:443?security=reality&encryption=none&pbk=KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=de.motion-vpn.com#Germany"
+        private const val FINLAND_LINK =
+            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?type=tcp&encryption=none&security=reality&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&fp=chrome&sni=www.max.ru&sid=74&spx=%2F&flow=xtls-rprx-vision#Finland"
 
         private const val POLAND_LINK =
             "vless://8b671692-edc3-4417-b648-d5569546ee0c@pl.motion-vpn.com:443?security=reality&encryption=none&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=pl.motion-vpn.com#Poland"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
-            "Швеция" to SWEDEN_LINK,
-            "Нидерланды" to NETHERLANDS_LINK,
-            "Германия" to GERMANY_LINK,
+            "Финляндия" to FINLAND_LINK,
             "Польша" to POLAND_LINK
         )
 
         // Хосты для пинга (извлечены из VLESS ссылок)
         private val PING_HOSTS = mapOf(
-            "Швеция" to "sw.motion-vpn.com",
-            "Нидерланды" to "nl.motion-vpn.com",
-            "Германия" to "de.motion-vpn.com",
+            "Финляндия" to "finlandbox.space",
             "Польша" to "pl.motion-vpn.com"
         )
 
@@ -139,15 +129,16 @@ class LunaActivity : AppCompatActivity() {
         try {
             val existing = MmkvManager.decodeServerList("")
 
-            // Удаляем все серверы кроме VLESS с motion-vpn.com
+            // Удаляем все серверы кроме наших VLESS
             if (existing.isNotEmpty()) {
                 val toKeep = mutableListOf<String>()
                 for (guid in existing) {
                     val config = MmkvManager.decodeServerConfig(guid)
-                    // Оставляем только VLESS конфигурации с motion-vpn.com
+                    // Оставляем только VLESS конфигурации с нашими серверами
                     if (config != null &&
                         config.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
-                        config.server?.contains("motion-vpn.com") == true) {
+                        (config.server?.contains("finlandbox.space") == true ||
+                         config.server?.contains("motion-vpn.com") == true)) {
                         toKeep.add(guid)
                         // Мапим по хосту
                         SERVERS.forEach { (country, _) ->
