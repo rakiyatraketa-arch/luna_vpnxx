@@ -93,6 +93,10 @@ class LunaActivity : AppCompatActivity() {
         // Включаем VPN режим
         MmkvManager.encodeSettings(AppConfig.PREF_MODE, AppConfig.VPN)
 
+        // Устанавливаем GLOBAL routing mode (индекс 2) для избежания проблем с geo-файлами
+        // GLOBAL режим не требует geosite:google и других geo-правил
+        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_RULESET, 2)
+
         webView = WebView(this)
         setContentView(webView)
         // Снижаем накладные расходы рендеринга (вид не меняется):
