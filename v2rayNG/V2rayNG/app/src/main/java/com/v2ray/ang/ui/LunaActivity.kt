@@ -15,14 +15,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.core.CoreServiceManager
+import com.v2ray.ang.dto.UrlContentRequest
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.URL
 
 /**
  * Luna VPN — экран на WebView поверх ядра v2rayNG.
@@ -45,14 +47,29 @@ class LunaActivity : AppCompatActivity() {
         private const val FINLAND_LINK =
             "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=www.max.ru&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&sid=74&spx=%2F#Finland"
 
+        private const val SWEDEN_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@sw.motion-vpn.com:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=sw.motion-vpn.com&pbk=8fymhqg_KSIkmSj-j-T-5OAsF7MbwAFrr8EoiXPKGkg&spx=%2F#Sweden"
+
+        private const val GERMANY_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@de.motion-vpn.com:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=de.motion-vpn.com&pbk=KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w#Germany"
+
+        private const val POLAND_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@pl.motion-vpn.com:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=pl.motion-vpn.com&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg#Poland"
+
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
-            "Финляндия" to FINLAND_LINK
+            "Финляндия" to FINLAND_LINK,
+            "Швеция" to SWEDEN_LINK,
+            "Германия" to GERMANY_LINK,
+            "Польша" to POLAND_LINK
         )
 
         // Хосты для пинга (извлечены из VLESS ссылок)
         private val PING_HOSTS = mapOf(
-            "Финляндия" to "finlandbox.space"
+            "Финляндия" to "finlandbox.space",
+            "Швеция" to "sw.motion-vpn.com",
+            "Германия" to "de.motion-vpn.com",
+            "Польша" to "pl.motion-vpn.com"
         )
 
         private const val PING_PORT = 443
@@ -134,10 +151,11 @@ class LunaActivity : AppCompatActivity() {
                 val toKeep = mutableListOf<String>()
                 for (guid in existing) {
                     val config = MmkvManager.decodeServerConfig(guid)
-                    // Оставляем только VLESS конфигурации с нашим сервером (Финляндия)
+                    // Оставляем только VLESS конфигурации с нашими серверами
                     if (config != null &&
                         config.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
-                        config.server?.contains("finlandbox.space") == true) {
+                        (config.server?.contains("finlandbox.space") == true ||
+                         config.server?.contains("motion-vpn.com") == true)) {
                         toKeep.add(guid)
                         // Мапим по хосту
                         SERVERS.forEach { (country, _) ->
@@ -206,14 +224,19 @@ class LunaActivity : AppCompatActivity() {
         return guidMap.values.firstOrNull() ?: MmkvManager.decodeServerList("").firstOrNull()
     }
 
+    /** true если guid указывает на один из наших VLESS-серверов (Финляндия/Швеция/Германия/Польша). */
+    private fun isOurServer(guid: String): Boolean {
+        val server = MmkvManager.decodeServerConfig(guid)?.server ?: return false
+        return server.contains("finlandbox.space") || server.contains("motion-vpn.com")
+    }
+
     private fun connectFlow(country: String?) {
         if (guidMap.isEmpty()) ensureServers()
         var guid = guidFor(country)
 
-        // Проверяем что guid декодируется в валидный VLESS-конфиг.
+        // Проверяем что guid декодируется в валидный VLESS-конфиг одного из наших серверов.
         // Если нет (устаревший guid от удалённого сервера) — переимпортируем серверы.
-        if (guid.isNullOrEmpty() ||
-            MmkvManager.decodeServerConfig(guid)?.server?.contains("finlandbox.space") != true) {
+        if (guid.isNullOrEmpty() || !isOurServer(guid)) {
             guidMap.clear()
             ensureServers()
             guid = guidFor(country)
@@ -268,16 +291,39 @@ class LunaActivity : AppCompatActivity() {
         }
     }
 
-    /** Проверка внешнего IP через уже поднятый туннель (трафик приложения тоже идёт в tun). */
+    /**
+     * Проверка внешнего IP ЧЕРЕЗ туннель.
+     *
+     * Важно: само приложение по умолчанию исключено из VPN (addDisallowedApplication),
+     * поэтому обычный URL().openConnection() возвращал бы реальный IP в обход VPN.
+     * Правильный путь — слать запрос через локальный HTTP-прокси ядра xray
+     * (127.0.0.1:getHttpPort()), как это делает SpeedtestManager.getRemoteIPInfo().
+     *
+     * Сразу после connect туннель ещё поднимается, поэтому делаем несколько попыток.
+     */
     private fun fetchIp() {
         lifecycleScope.launch(Dispatchers.IO) {
-            val result = try {
-                URL(IP_CHECK_URL).openConnection().apply {
-                    connectTimeout = 8000
-                    readTimeout = 8000
-                }.getInputStream().bufferedReader().use { it.readText() }
-            } catch (e: Exception) {
-                ""
+            var result = ""
+            // до 6 попыток с паузой ~1.5с — ждём пока туннель реально начнёт роутить трафик
+            for (attempt in 0 until 6) {
+                if (attempt > 0) delay(1500)
+                val httpPort = SettingsManager.getHttpPort()
+                val content = if (httpPort != 0) {
+                    HttpUtil.getUrlContent(
+                        UrlContentRequest(
+                            url = IP_CHECK_URL,
+                            timeout = 8000,
+                            httpPort = httpPort
+                        )
+                    )
+                } else {
+                    null
+                }
+                // ip-api.com отдаёт JSON с полем "query" (IP). Считаем ответ валидным если оно есть.
+                if (!content.isNullOrBlank() && content.contains("\"query\"")) {
+                    result = content
+                    break
+                }
             }
             withContext(Dispatchers.Main) {
                 val esc = result
