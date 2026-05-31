@@ -41,22 +41,18 @@ class LunaActivity : AppCompatActivity() {
 
     companion object {
         // VLESS ключи для разных стран
+        // Точный рабочий формат из v2rayTun (с encryption=none и headerType=none)
         private const val FINLAND_LINK =
-            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?type=tcp&encryption=none&security=reality&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&fp=chrome&sni=www.max.ru&sid=74&spx=%2F&flow=xtls-rprx-vision#Finland"
-
-        private const val POLAND_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@pl.motion-vpn.com:443?security=reality&encryption=none&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=pl.motion-vpn.com#Poland"
+            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=www.max.ru&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&sid=74&spx=%2F#Finland"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
-            "Финляндия" to FINLAND_LINK,
-            "Польша" to POLAND_LINK
+            "Финляндия" to FINLAND_LINK
         )
 
         // Хосты для пинга (извлечены из VLESS ссылок)
         private val PING_HOSTS = mapOf(
-            "Финляндия" to "finlandbox.space",
-            "Польша" to "pl.motion-vpn.com"
+            "Финляндия" to "finlandbox.space"
         )
 
         private const val PING_PORT = 443
@@ -138,11 +134,10 @@ class LunaActivity : AppCompatActivity() {
                 val toKeep = mutableListOf<String>()
                 for (guid in existing) {
                     val config = MmkvManager.decodeServerConfig(guid)
-                    // Оставляем только VLESS конфигурации с нашими серверами
+                    // Оставляем только VLESS конфигурации с нашим сервером (Финляндия)
                     if (config != null &&
                         config.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
-                        (config.server?.contains("finlandbox.space") == true ||
-                         config.server?.contains("motion-vpn.com") == true)) {
+                        config.server?.contains("finlandbox.space") == true) {
                         toKeep.add(guid)
                         // Мапим по хосту
                         SERVERS.forEach { (country, _) ->
@@ -213,8 +208,18 @@ class LunaActivity : AppCompatActivity() {
 
     private fun connectFlow(country: String?) {
         if (guidMap.isEmpty()) ensureServers()
-        val guid = guidFor(country)
-        if (guid.isNullOrEmpty()) {
+        var guid = guidFor(country)
+
+        // Проверяем что guid декодируется в валидный VLESS-конфиг.
+        // Если нет (устаревший guid от удалённого сервера) — переимпортируем серверы.
+        if (guid.isNullOrEmpty() ||
+            MmkvManager.decodeServerConfig(guid)?.server?.contains("finlandbox.space") != true) {
+            guidMap.clear()
+            ensureServers()
+            guid = guidFor(country)
+        }
+
+        if (guid.isNullOrEmpty() || MmkvManager.decodeServerConfig(guid) == null) {
             Toast.makeText(this, "Нет сервера для подключения", Toast.LENGTH_SHORT).show()
             pushState(false)
             return
