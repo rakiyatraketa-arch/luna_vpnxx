@@ -42,24 +42,21 @@ import kotlinx.coroutines.withContext
 class LunaActivity : AppCompatActivity() {
 
     companion object {
-        // VLESS ключи для разных стран
-        // Точный рабочий формат из v2rayTun (с encryption=none и headerType=none)
+        // VLESS ключи для разных стран — реальные рабочие ссылки пользователя.
+        // Вписаны дословно (включая pqv/sid/spx), чтобы импорт совпадал 1:1
+        // с тем, что работает в других клиентах.
         private const val FINLAND_LINK =
-            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=www.max.ru&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&sid=74&spx=%2F#Finland"
-
-        private const val SWEDEN_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@sw.motion-vpn.com:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=sw.motion-vpn.com&pbk=8fymhqg_KSIkmSj-j-T-5OAsF7MbwAFrr8EoiXPKGkg&spx=%2F#Sweden"
+            "vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?type=tcp&encryption=none&security=reality&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&fp=chrome&sni=www.max.ru&sid=74&spx=%2F&pqv=v4GieDSOTD4c1CDvhdpYW8miJgA17fA_xoCAH-_ndV7CVrv6Q0e2BR2vDuIlSDivmzB5zyFPVQiNIBjbtSlET1gQlSAztzNAyWY9UQ32vC8jlKLtHRXtIvLnbBSbExrpSmyoJUOLcKUIJzsyBwo_q9K8iHcKItHrMjtCzBNaoWZI5-9kh9UDchWlSznvK-lVkGHbYuHAjXoq21Tyuum8vCEyOEXZqPymNp265LWV9VB-2FhXN7tcjNjLTVuvr7NTef8RH8kes2vsfkA-RxS-o9vsMe6ERXFQwmNZm_q3kNpuaNJArQYDcP1q_q8F3IoqG9kU1gW5yv7Z7QIItSZkI1O9SJNTwBPLAUo-fRUvHwahrRYVoqNvpSCG720lbMFUdACFM_5IMN2DhDqNgNgRv4u3T7--6K0345Vuv2AiuarS17hFh-zmqjUdq4yCchpBuMMyZLS7M-Gb5aYMFgpNlgVKUfjFTYxy0yzq_3ZNFdezJfFHsutL-n80uix40nFbLQ_UdGWDx58zyyHkuKTqX-1SKK6dB2cwgCp6iKf8nDW8WgECxc8gkPPQbUFL5zRiYJy0lpe8mA0hWgmpzYYsA5GxhuoxeI9OLUllZLS9T2yTq_xq-FxKi8iuJFGTUIA6S5OVsgCNu0nT4VF1HDl8cxlQpnz5QltQ6S7Re3uYG4dSPslNVEN7XW--ow0Exv2XQCNb424q_4FsoJDPFiaDLRTRwLk7ePpBG04VeHqjgg8Hl0fIT3bD4LOnnpxUDBQogBSUJwu5s0X0twD6FJYA7r-39A_Sp0A9uFlh_c5_D6ZcBkcb6lGr6fpteEkTivYItOZJy804eP-7GmWUew9GynyVMW8SMj-_nOF8X3_wcBvn2m_zDpQ3AMbtYFahUoxDRuW8ANNzWaJrf-IQ4JlBrVMPCaAGav50GYFINrr0zRl-bue2AqkQhi7ViME1driUUomd1GGoxxgxIbZOkCDsHXUopiKmo20nlIELvQlsXsqGvLf-YlLncNNzy5wadFzIFf9kozww0yFisbHaMfn-gkkhZ9S-xyUnWmI_yyNSwf4FxLK-kGB43sCF27p76_MhcnasRjYGp3LT9VW8CQLzs0cq9F-gfxV7PY2DwLG6JBsigmut_6bHUNPw-waCGaXdyG8rXKOxO3AYP0YlWTYXpdP7UJrGZH2EkssRfIOoqEYGPRasorMRJSapTSXIMjKeE--ijNtCQQ5wYOuWmoMGjJAuR62Wws-L9q9PZ0RY_0Q1cRl4z2hDW5VptjdyZZKc5-ge8XSEzqUkydxrpDE7H4qvWBu3suHyMjtd3OHiINA88lSHdb7M6LVaGahIRsIfCSk_XkbUT1r0utHt5ngL6EV_EulWcrXEHmlhfRoVsPaLYXBPvzigIoC8Tnt6gQvMxbe2DjIPmJwPj-HmltBWX478jP6TDucab4Wwzijwq0XeK2n9Hp2k8hgBwV50c1h_z0g0ObHPkGp6iu67clyUqzTRhUXOa8C-wLhyO-hDPXLwVZAEAvmUb-TjiMAFFhZzwbrP79kAW1guqz6vXTppxvo4gTSjPOVK26phdbbH7poJ1A0Z3NI6cLShq9aX-Wi4ay3gTxGu6fZiItb0jMHun7s1UTURqlz3Obh96XFiq52PkGVTqLuJomcdUo4a3SvT8OZ-uA2KPqppLbuA6a2si8YCDO2x_uNjfxUd-exTTE8X9lWe9nrPOKRszwPsvRZvUYNMigWLhzpm6Rd3ljnUhY7wgBKjNE344H_6vzZ6m30HiSVOIkGOdVoZIhE7vhQIKsgTwMnWmDISpYMyRNDaH9jQEyqcd8CTDl4GLyO0iwDqFfr8ji2121DUecbqPzX5GywLRQ6MWsy7lGNO87DUkWaGa5GTngaRwvTuwD0XNCA_QR530LT5WvAQ46KM0DlwKymRGYilInVn39vSQuHp8szRjlML6ePMKO1OXQM03p4Itwdi9Lvas_dqjn9UScCaHEkDA7Up1-QA9QGIfghB5oOU8XV_1iSA7iB4-2Terw-jj42Ncy7gVptCDMuCu-KcgFh5dXixlS7TKKbqxlHeI2Bbb96VVdp0lgmJ5I6UpBiYEutqeLr9ko1KhEGeCObU68H2pDQmSzsgwjRZUQZssspBnGQMph5B6EBMnlX7HyXR7gXqebqhHSjRHN0OHADuL0ScdsVUGk6Rx7Xf_2uFnmYasrHauUA2h3gvzKSLnZQ4dgPWIMset0uPKX9yDlQnawUlAqiwkPDQ8dRDRyi3DSXcEzEYhNIJDreGSo23SPEPw4US7kPlCJauDrQqoKTrbWJPA2-kAxLU3ZMXq6YP_q2hJdQ5tEB6O_BKGdjXR5fWiA5_jISicso_SLyn82ZqIEea0DjzEE5M_UEVcBS1wf5ugbJrDz8wEFPKsPaTB4ZUR-9SyGc_TYqiStIelysDOltdEmqva4OCJupuoJNOTI0d3wVdupQwleg-yqlPzkrMM2qYt4FYmsehSkhlhf9emj61091HbL5HnrLgS9tvTpPEPVGi0wYzQnwAD8ODJ04-AZ1OMviG6nS0B-BulVoWzFUHNuEr7NKg2JfWoDb7VdqKCNwXdhDAk1P5dw7K1t0&flow=xtls-rprx-vision#vless%20filnlad-BY%20ZYNNC"
 
         private const val GERMANY_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@de.motion-vpn.com:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=de.motion-vpn.com&pbk=KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w#Germany"
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@de.motion-vpn.com:443?flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=de.motion-vpn.com&pbk=KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w#%F0%9F%87%A9%F0%9F%87%AA%D0%93%D0%B5%D1%80%D0%BC%D0%B0%D0%BD%D0%B8%D1%8F%20%7C%20WI-FI"
 
         private const val POLAND_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@pl.motion-vpn.com:443?encryption=none&flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=pl.motion-vpn.com&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg#Poland"
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@pl.motion-vpn.com:443?flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=pl.motion-vpn.com&pbk=IY4hLHcko9ssHpOASf5giYZL4XMy0kGzkvi9n4PLtxg#%F0%9F%87%B5%F0%9F%87%B1%D0%9F%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%20%7C%20WI-FI%20%F0%9F%92%8E"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
             "Финляндия" to FINLAND_LINK,
-            "Швеция" to SWEDEN_LINK,
             "Германия" to GERMANY_LINK,
             "Польша" to POLAND_LINK
         )
@@ -67,7 +64,6 @@ class LunaActivity : AppCompatActivity() {
         // Хосты для пинга (извлечены из VLESS ссылок)
         private val PING_HOSTS = mapOf(
             "Финляндия" to "finlandbox.space",
-            "Швеция" to "sw.motion-vpn.com",
             "Германия" to "de.motion-vpn.com",
             "Польша" to "pl.motion-vpn.com"
         )
@@ -144,40 +140,20 @@ class LunaActivity : AppCompatActivity() {
     /** Импорт линков из SERVERS и построение map "локация -> guid". Дедуп по линку. */
     private fun ensureServers() {
         try {
-            val existing = MmkvManager.decodeServerList("")
-
-            // Удаляем все серверы кроме наших VLESS
-            if (existing.isNotEmpty()) {
-                val toKeep = mutableListOf<String>()
-                for (guid in existing) {
-                    val config = MmkvManager.decodeServerConfig(guid)
-                    // Оставляем только VLESS конфигурации с нашими серверами
-                    if (config != null &&
-                        config.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
-                        (config.server?.contains("finlandbox.space") == true ||
-                         config.server?.contains("motion-vpn.com") == true)) {
-                        toKeep.add(guid)
-                        // Мапим по хосту
-                        SERVERS.forEach { (country, _) ->
-                            val host = PING_HOSTS[country]
-                            if (config.server == host) {
-                                guidMap[country] = guid
-                            }
-                        }
-                    } else {
-                        // Удаляем лишние конфигурации
-                        MmkvManager.removeServer(guid)
-                    }
+            val ourHosts = PING_HOSTS.values.toSet()
+            // Удаляем РАНЕЕ импортированные наши серверы, чтобы гарантированно
+            // применить актуальные ссылки (например, добавившийся pqv у Финляндии)
+            // и не плодить дубликаты при каждом запуске. Чужие профили не трогаем.
+            for (guid in MmkvManager.decodeServerList("")) {
+                val config = MmkvManager.decodeServerConfig(guid)
+                if (config?.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
+                    config.server != null && ourHosts.contains(config.server)) {
+                    MmkvManager.removeServer(guid)
                 }
-
-                // Если не хватает серверов, импортируем недостающие
-                if (guidMap.size < SERVERS.size) {
-                    importDefaultServer()
-                }
-            } else {
-                // Нет серверов - импортируем все
-                importDefaultServer()
             }
+            guidMap.clear()
+            // Импортируем актуальные ссылки заново
+            importDefaultServer()
         } catch (e: Exception) {
             // не валим UI — connect() позже покажет ошибку
         }
@@ -224,10 +200,10 @@ class LunaActivity : AppCompatActivity() {
         return guidMap.values.firstOrNull() ?: MmkvManager.decodeServerList("").firstOrNull()
     }
 
-    /** true если guid указывает на один из наших VLESS-серверов (Финляндия/Швеция/Германия/Польша). */
+    /** true если guid указывает на один из наших VLESS-серверов (Финляндия/Германия/Польша). */
     private fun isOurServer(guid: String): Boolean {
         val server = MmkvManager.decodeServerConfig(guid)?.server ?: return false
-        return server.contains("finlandbox.space") || server.contains("motion-vpn.com")
+        return PING_HOSTS.values.any { server.contains(it) }
     }
 
     private fun connectFlow(country: String?) {
