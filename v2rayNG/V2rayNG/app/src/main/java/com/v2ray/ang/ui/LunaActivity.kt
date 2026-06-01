@@ -162,14 +162,20 @@ class LunaActivity : AppCompatActivity() {
     /** Импортирует все VLESS серверы */
     private fun importDefaultServer() {
         try {
-            val before = MmkvManager.decodeServerList("").toSet()
-
-            // Импортируем все серверы
+            // Импортируем каждую ссылку с append = true.
+            // ВАЖНО: append = false заставляет importBatchConfig сначала УДАЛИТЬ все
+            // серверы подписки "" и лишь потом добавить новый — поэтому в цикле
+            // выживал только последний сервер (оставалась одна локация). С append = true
+            // серверы накапливаются. Дубликаты исключены: ensureServers() заранее
+            // удаляет ранее импортированные наши профили.
             SERVERS.forEach { (country, link) ->
-                AngConfigManager.importBatchConfig(link, "", false)
-                val newGuids = MmkvManager.decodeServerList("").filter { it !in before }
-                if (newGuids.isNotEmpty()) {
-                    guidMap[country] = newGuids.last()
+                // Снимок списка ДО импорта именно этой ссылки — чтобы точно
+                // определить добавленный guid независимо от порядка хранения.
+                val before = MmkvManager.decodeServerList("").toSet()
+                AngConfigManager.importBatchConfig(link, "", true)
+                val newGuid = MmkvManager.decodeServerList("").firstOrNull { it !in before }
+                if (newGuid != null) {
+                    guidMap[country] = newGuid
                 }
             }
         } catch (e: Exception) {
