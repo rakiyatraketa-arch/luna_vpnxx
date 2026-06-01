@@ -70,13 +70,19 @@ class LunaActivity : AppCompatActivity() {
 
         private const val PING_PORT = 443
         private const val IP_CHECK_URL = "http://ip-api.com/json"
+
+        // Ключ кэша версии набора серверов. Тяжёлый переимпорт ссылок выполняется
+        // только когда этот хэш изменился (т.е. ссылки реально поменяли).
+        private const val CONFIG_VERSION_KEY = "luna_servers_version"
     }
 
     private lateinit var webView: WebView
     private val mainViewModel: MainViewModel by viewModels()
 
     // имя локации -> guid импортированного сервера
-    private val guidMap = mutableMapOf<String, String>()
+    // Перестраивается атомарно (в фоне) — читается и из UI-, и из IO-потока.
+    @Volatile
+    private var guidMap: Map<String, String> = emptyMap()
     private var pendingCountry: String? = null
 
     private val requestVpnPermission =
@@ -91,20 +97,6 @@ class LunaActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Копируем geosite.dat/geoip.dat из ассетов APK в рабочую папку ядра.
-        // Без них xray падает с "config error: geosite.dat no such file" на routing-правилах.
-        SettingsManager.initAssets(this, assets)
-
-        // Включаем режим TUN (xray встроенный TUN вместо hev-socks5-tunnel)
-        MmkvManager.encodeSettings(AppConfig.PREF_USE_HEV_TUNNEL, false)
-
-        // Включаем VPN режим
-        MmkvManager.encodeSettings(AppConfig.PREF_MODE, AppConfig.VPN)
-
-        // Устанавливаем GLOBAL routing mode (индекс 2) для избежания проблем с geo-файлами
-        // GLOBAL режим не требует geosite:google и других geo-правил
-        MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_RULESET, 2)
 
         webView = WebView(this)
         setContentView(webView)
@@ -128,22 +120,51 @@ class LunaActivity : AppCompatActivity() {
         mainViewModel.isRunning.observe(this) { running -> pushState(running == true) }
         mainViewModel.startListenBroadcast()
 
-        // импортируем серверы (быстро, без сети для одиночных линков)
-        ensureServers()
-
-        // Восстанавливаем последний выбранный сервер
-        restoreLastServer()
-
+        // Интерфейс показываем СРАЗУ — он не ждёт инициализации ядра/импорта.
         webView.loadUrl("file:///android_asset/luna/index.html")
+
+        // Вся тяжёлая инициализация — в фоне, чтобы старт был мгновенным и без фризов:
+        //  • копирование geosite.dat/geoip.dat (иначе xray падает на routing-правилах);
+        //  • настройки режима (TUN, VPN, GLOBAL routing);
+        //  • импорт/сверка серверов (парсинг ссылок, включая pqv) — только при смене ссылок.
+        lifecycleScope.launch(Dispatchers.IO) {
+            SettingsManager.initAssets(this@LunaActivity, this@LunaActivity.assets)
+            MmkvManager.encodeSettings(AppConfig.PREF_USE_HEV_TUNNEL, false)
+            MmkvManager.encodeSettings(AppConfig.PREF_MODE, AppConfig.VPN)
+            MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_RULESET, 2)
+            ensureServers()
+            restoreLastServer()
+        }
     }
 
-    /** Импорт линков из SERVERS и построение map "локация -> guid". Дедуп по линку. */
+    /** Версия набора серверов — меняется при любом изменении ссылок (для кэша переимпорта). */
+    private fun serversVersion(): String = SERVERS.values.joinToString("|").hashCode().toString()
+
+    /**
+     * Гарантирует наличие наших VLESS-серверов и строит карту "локация -> guid".
+     *
+     * Оптимизация: тяжёлый переимпорт (парсинг ссылок, включая pqv) выполняется ТОЛЬКО когда
+     * набор ссылок изменился (сверка по версии-хэшу). На обычном запуске карта восстанавливается
+     * из уже сохранённых профилей — без удаления и перезаливки. Рассчитан на вызов в фоне (IO).
+     */
     private fun ensureServers() {
         try {
+            val hostToCountry = PING_HOSTS.entries.associate { (country, host) -> host to country }
+            val desiredVersion = serversVersion()
+            val storedVersion = MmkvManager.decodeSettingsString(CONFIG_VERSION_KEY)
+
+            // Быстрый путь: ссылки не менялись — просто строим карту из существующих профилей.
+            if (storedVersion == desiredVersion) {
+                val map = buildGuidMap(hostToCountry)
+                if (map.size == SERVERS.size) {
+                    guidMap = map
+                    return
+                }
+            }
+
+            // Реконсиляция: удаляем ранее импортированные наши профили (чужие не трогаем)
+            // и заливаем актуальные ссылки. Затем фиксируем версию, чтобы не повторять.
             val ourHosts = PING_HOSTS.values.toSet()
-            // Удаляем РАНЕЕ импортированные наши серверы, чтобы гарантированно
-            // применить актуальные ссылки (например, добавившийся pqv у Финляндии)
-            // и не плодить дубликаты при каждом запуске. Чужие профили не трогаем.
             for (guid in MmkvManager.decodeServerList("")) {
                 val config = MmkvManager.decodeServerConfig(guid)
                 if (config?.configType == com.v2ray.ang.enums.EConfigType.VLESS &&
@@ -151,16 +172,28 @@ class LunaActivity : AppCompatActivity() {
                     MmkvManager.removeServer(guid)
                 }
             }
-            guidMap.clear()
-            // Импортируем актуальные ссылки заново
-            importDefaultServer()
+            guidMap = importDefaultServer()
+            MmkvManager.encodeSettings(CONFIG_VERSION_KEY, desiredVersion)
         } catch (e: Exception) {
             // не валим UI — connect() позже покажет ошибку
         }
     }
 
-    /** Импортирует все VLESS серверы */
-    private fun importDefaultServer() {
+    /** Строит карту "локация -> guid" из уже сохранённых VLESS-профилей по совпадению хоста. */
+    private fun buildGuidMap(hostToCountry: Map<String, String>): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        for (guid in MmkvManager.decodeServerList("")) {
+            val config = MmkvManager.decodeServerConfig(guid) ?: continue
+            if (config.configType == com.v2ray.ang.enums.EConfigType.VLESS) {
+                hostToCountry[config.server]?.let { country -> map[country] = guid }
+            }
+        }
+        return map
+    }
+
+    /** Импортирует все VLESS серверы и возвращает карту "локация -> guid". */
+    private fun importDefaultServer(): Map<String, String> {
+        val map = mutableMapOf<String, String>()
         try {
             // Импортируем каждую ссылку с append = true.
             // ВАЖНО: append = false заставляет importBatchConfig сначала УДАЛИТЬ все
@@ -175,12 +208,13 @@ class LunaActivity : AppCompatActivity() {
                 AngConfigManager.importBatchConfig(link, "", true)
                 val newGuid = MmkvManager.decodeServerList("").firstOrNull { it !in before }
                 if (newGuid != null) {
-                    guidMap[country] = newGuid
+                    map[country] = newGuid
                 }
             }
         } catch (e: Exception) {
             // игнорируем ошибки импорта
         }
+        return map
     }
 
     /** Восстанавливает последний выбранный сервер из настроек */
@@ -213,33 +247,44 @@ class LunaActivity : AppCompatActivity() {
     }
 
     private fun connectFlow(country: String?) {
-        if (guidMap.isEmpty()) ensureServers()
-        var guid = guidFor(country)
+        // Корутина на главном диспетчере: тяжёлую сверку серверов уносим на IO,
+        // а UI-поток держит только лёгкие операции и системный VPN-диалог.
+        lifecycleScope.launch {
+            // На IO (без блокировки UI): гарантируем geo-файлы (идемпотентно, дёшево если уже
+            // скопированы) и готовность карты серверов, если фон не успел при старте.
+            withContext(Dispatchers.IO) {
+                SettingsManager.initAssets(this@LunaActivity, this@LunaActivity.assets)
+                if (guidMap.isEmpty()) ensureServers()
+            }
+            var guid = guidFor(country)
 
-        // Проверяем что guid декодируется в валидный VLESS-конфиг одного из наших серверов.
-        // Если нет (устаревший guid от удалённого сервера) — переимпортируем серверы.
-        if (guid.isNullOrEmpty() || !isOurServer(guid)) {
-            guidMap.clear()
-            ensureServers()
-            guid = guidFor(country)
-        }
+            // Если guid пуст или указывает на невалидный/чужой конфиг (устаревший guid
+            // от удалённого сервера) — форсируем переимпорт в фоне.
+            if (guid.isNullOrEmpty() || !isOurServer(guid)) {
+                withContext(Dispatchers.IO) {
+                    MmkvManager.encodeSettings(CONFIG_VERSION_KEY, "") // сбросить кэш -> ensureServers перельёт
+                    ensureServers()
+                }
+                guid = guidFor(country)
+            }
 
-        if (guid.isNullOrEmpty() || MmkvManager.decodeServerConfig(guid) == null) {
-            Toast.makeText(this, "Нет сервера для подключения", Toast.LENGTH_SHORT).show()
-            pushState(false)
-            return
-        }
-        // Сохраняем выбранный сервер ПЕРЕД подключением
-        MmkvManager.setSelectServer(guid)
-        // Сохраняем выбранную страну для восстановления
-        MmkvManager.encodeSettings("luna_last_country", country ?: "")
-        pendingCountry = country
+            if (guid.isNullOrEmpty() || MmkvManager.decodeServerConfig(guid) == null) {
+                Toast.makeText(this@LunaActivity, "Нет сервера для подключения", Toast.LENGTH_SHORT).show()
+                pushState(false)
+                return@launch
+            }
+            // Сохраняем выбранный сервер ПЕРЕД подключением
+            MmkvManager.setSelectServer(guid)
+            // Сохраняем выбранную страну для восстановления
+            MmkvManager.encodeSettings("luna_last_country", country ?: "")
+            pendingCountry = country
 
-        if (SettingsManager.isVpnMode()) {
-            val intent = VpnService.prepare(this)
-            if (intent == null) doStart() else requestVpnPermission.launch(intent)
-        } else {
-            doStart()
+            if (SettingsManager.isVpnMode()) {
+                val intent = VpnService.prepare(this@LunaActivity)
+                if (intent == null) doStart() else requestVpnPermission.launch(intent)
+            } else {
+                doStart()
+            }
         }
     }
 
