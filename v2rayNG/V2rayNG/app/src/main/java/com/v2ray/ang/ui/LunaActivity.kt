@@ -51,21 +51,21 @@ class LunaActivity : AppCompatActivity() {
         private const val GERMANY_LINK =
             "vless://8b671692-edc3-4417-b648-d5569546ee0c@de.motion-vpn.com:443?flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=de.motion-vpn.com&pbk=KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w#%F0%9F%87%A9%F0%9F%87%AA%D0%93%D0%B5%D1%80%D0%BC%D0%B0%D0%BD%D0%B8%D1%8F%20%7C%20WI-FI"
 
-        private const val SWEDEN_LINK =
-            "vless://8b671692-edc3-4417-b648-d5569546ee0c@sw.motion-vpn.com:443?flow=xtls-rprx-vision&type=tcp&headerType=none&security=reality&fp=chrome&sni=sw.motion-vpn.com&pbk=8fymhqg_KSIkmSj-j-T-5OAsF7MbwAFrr8EoiXPKGkg&spx=/#%F0%9F%87%B8%F0%9F%87%AA%D0%A8%D0%B2%D0%B5%D1%86%D0%B8%D1%8F%20%7C%20WI-FI"
+        private const val RUSSIA_LINK =
+            "vless://8b671692-edc3-4417-b648-d5569546ee0c@ru.motion-vpn.com:443?security=reality&encryption=none&pbk=P1h8QpXRTeBoNu84lS6IaRwl_r5yINnyYXOSMzdDhmc&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=ru.motion-vpn.com#%F0%9F%87%B7%F0%9F%87%BA%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F%20%5B%D0%98%D0%B3%D1%80%D1%8B%2C%20Discord%5D"
 
         // имя локации -> VLESS-ссылка
         private val SERVERS = linkedMapOf(
             "Финляндия" to FINLAND_LINK,
             "Германия" to GERMANY_LINK,
-            "Швеция" to SWEDEN_LINK
+            "Россия" to RUSSIA_LINK
         )
 
         // Хосты для пинга (извлечены из VLESS ссылок)
         private val PING_HOSTS = mapOf(
             "Финляндия" to "finlandbox.space",
             "Германия" to "de.motion-vpn.com",
-            "Швеция" to "sw.motion-vpn.com"
+            "Россия" to "ru.motion-vpn.com"
         )
 
         private const val PING_PORT = 443
@@ -206,7 +206,7 @@ class LunaActivity : AppCompatActivity() {
         return guidMap.values.firstOrNull() ?: MmkvManager.decodeServerList("").firstOrNull()
     }
 
-    /** true если guid указывает на один из наших VLESS-серверов (Финляндия/Германия/Швеция). */
+    /** true если guid указывает на один из наших VLESS-серверов (Финляндия/Германия/Россия). */
     private fun isOurServer(guid: String): Boolean {
         val server = MmkvManager.decodeServerConfig(guid)?.server ?: return false
         return PING_HOSTS.values.any { server.contains(it) }
