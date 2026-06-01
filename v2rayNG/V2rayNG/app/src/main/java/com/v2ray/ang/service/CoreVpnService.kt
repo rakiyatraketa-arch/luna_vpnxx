@@ -113,9 +113,15 @@ class CoreVpnService : VpnService(), ServiceControl {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         LogUtil.i(AppConfig.TAG, "StartCore-VPN: Service command received")
+        // startForeground обязан вызваться на главном потоке и быстро — оставляем здесь.
         NotificationManager.showNotification(null)
-        setupVpnService()
-        startService()
+        // Тяжёлый старт (establish TUN + сборка JSON-конфига + нативный запуск ядра xray,
+        // включая Reality/pqv) уносим с главного потока, иначе UI замирает на ~секунду
+        // при подключении («фриз»).
+        Thread {
+            setupVpnService()
+            startService()
+        }.start()
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)
     }

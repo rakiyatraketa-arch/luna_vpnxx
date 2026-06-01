@@ -502,7 +502,10 @@ object CoreServiceManager {
 
                 AppConfig.MSG_STATE_STOP -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Stop service")
-                    serviceControl.stopService()
+                    // onReceive идёт на главном потоке. Остановка ядра (нативный stopLoop +
+                    // Thread.sleep(100) + закрытие TUN) тяжёлая — уносим в фон, иначе фриз
+                    // UI при отключении.
+                    Thread { serviceControl.stopService() }.start()
                 }
 
                 AppConfig.MSG_STATE_RESTART -> {
