@@ -247,36 +247,40 @@ class LunaActivity : AppCompatActivity() {
     }
 
     private fun connectFlow(country: String?) {
-        // Корутина на главном диспетчере: тяжёлую сверку серверов уносим на IO,
-        // а UI-поток держит только лёгкие операции и системный VPN-диалог.
+        // Корутина на главном диспетчере. ВСЯ работа с MMKV/диском/парсингом конфигов
+        // (включая декод "тяжёлого" профиля с большим pqv) уносится в ОДИН IO-блок,
+        // чтобы тап Connect не блокировал UI. На главном потоке остаются только
+        // системный VPN-диалог и старт сервиса.
         lifecycleScope.launch {
-            // На IO (без блокировки UI): гарантируем geo-файлы (идемпотентно, дёшево если уже
-            // скопированы) и готовность карты серверов, если фон не успел при старте.
-            withContext(Dispatchers.IO) {
+            val guid = withContext(Dispatchers.IO) {
+                // geo-файлы (идемпотентно, дёшево если уже скопированы) + готовность карты серверов.
                 SettingsManager.initAssets(this@LunaActivity, this@LunaActivity.assets)
                 if (guidMap.isEmpty()) ensureServers()
-            }
-            var guid = guidFor(country)
 
-            // Если guid пуст или указывает на невалидный/чужой конфиг (устаревший guid
-            // от удалённого сервера) — форсируем переимпорт в фоне.
-            if (guid.isNullOrEmpty() || !isOurServer(guid)) {
-                withContext(Dispatchers.IO) {
+                var g = guidFor(country)
+                // Если guid пуст или указывает на невалидный/чужой конфиг (устаревший guid
+                // от удалённого сервера) — форсируем переимпорт.
+                if (g.isNullOrEmpty() || !isOurServer(g)) {
                     MmkvManager.encodeSettings(CONFIG_VERSION_KEY, "") // сбросить кэш -> ensureServers перельёт
                     ensureServers()
+                    g = guidFor(country)
                 }
-                guid = guidFor(country)
+
+                if (g.isNullOrEmpty() || MmkvManager.decodeServerConfig(g) == null) {
+                    null
+                } else {
+                    // Сохраняем выбранный сервер и страну ПЕРЕД подключением.
+                    MmkvManager.setSelectServer(g)
+                    MmkvManager.encodeSettings("luna_last_country", country ?: "")
+                    g
+                }
             }
 
-            if (guid.isNullOrEmpty() || MmkvManager.decodeServerConfig(guid) == null) {
+            if (guid == null) {
                 Toast.makeText(this@LunaActivity, "Нет сервера для подключения", Toast.LENGTH_SHORT).show()
                 pushState(false)
                 return@launch
             }
-            // Сохраняем выбранный сервер ПЕРЕД подключением
-            MmkvManager.setSelectServer(guid)
-            // Сохраняем выбранную страну для восстановления
-            MmkvManager.encodeSettings("luna_last_country", country ?: "")
             pendingCountry = country
 
             if (SettingsManager.isVpnMode()) {
