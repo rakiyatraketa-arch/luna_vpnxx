@@ -23,6 +23,7 @@ import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -84,6 +85,10 @@ class LunaActivity : AppCompatActivity() {
     @Volatile
     private var guidMap: Map<String, String> = emptyMap()
     private var pendingCountry: String? = null
+
+    // Корутина пуша трафика (сбор счётчиков в фоне, чтобы не блокировать UI WebView).
+    @Volatile
+    private var trafficJob: kotlinx.coroutines.Job? = null
 
     private val requestVpnPermission =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -296,6 +301,29 @@ class LunaActivity : AppCompatActivity() {
         CoreServiceManager.startVService(this)
     }
 
+    /**
+     * Пуш трафика в WebView. Счётчики читаются на ФОНОВОМ потоке (Dispatchers.IO),
+     * в главный поток выходим только на короткий evaluateJavascript с готовыми числами.
+     */
+    private fun startTrafficPush() {
+        if (trafficJob?.isActive == true) return
+        trafficJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                val rx = TrafficStats.getTotalRxBytes().coerceAtLeast(0)
+                val tx = TrafficStats.getTotalTxBytes().coerceAtLeast(0)
+                withContext(Dispatchers.Main) {
+                    webView.evaluateJavascript("window.lunaOnTraffic && window.lunaOnTraffic($rx, $tx)", null)
+                }
+                delay(1500)
+            }
+        }
+    }
+
+    private fun stopTrafficPush() {
+        trafficJob?.cancel()
+        trafficJob = null
+    }
+
     private fun pushState(running: Boolean) {
         runOnUiThread {
             webView.evaluateJavascript("window.lunaOnState && window.lunaOnState($running)", null)
@@ -381,6 +409,7 @@ class LunaActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         // Сохраняем состояние перед уничтожением
+        stopTrafficPush()
         saveCurrentState()
         super.onDestroy()
     }
@@ -420,11 +449,19 @@ class LunaActivity : AppCompatActivity() {
         @JavascriptInterface
         fun isRunning(): Boolean = mainViewModel.isRunning.value == true
 
+        /**
+         * Запускает ПУШ трафика: каждые ~1.5с собираем счётчики в ФОНЕ и пушим в WebView.
+         * Раньше JS дёргал синхронный getTraffic() с UI-потока WebView — это блокировало
+         * рендерер на IPC и давало периодический микрофриз. Теперь главный поток не ждёт.
+         */
         @JavascriptInterface
-        fun getTraffic(): String {
-            val rx = TrafficStats.getTotalRxBytes().coerceAtLeast(0)
-            val tx = TrafficStats.getTotalTxBytes().coerceAtLeast(0)
-            return "$rx,$tx"
+        fun startTraffic() {
+            startTrafficPush()
+        }
+
+        @JavascriptInterface
+        fun stopTraffic() {
+            stopTrafficPush()
         }
 
         @JavascriptInterface

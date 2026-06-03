@@ -351,7 +351,6 @@
         let isConnected = false;
         let isConnecting = false;
         let timerInterval = null;
-        let statsInterval = null;
         let startTime = 0;
         let prevTraffic = null;
         let connectTimeout = null;
@@ -370,10 +369,13 @@
             timerElement.textContent = `${h}:${m}:${s}`;
         }
 
-        function pollTraffic() {
-            if (!Bridge || !Bridge.getTraffic) return;
+        // Трафик приходит ПУШем из Kotlin (window.lunaOnTraffic), а не синхронным
+        // pull-вызовом моста. Синхронный Bridge.getTraffic() блокировал бы UI-поток
+        // WebView на IPC с процессом рендерера каждые 1.5с — это давало периодический
+        // микрофриз именно в нативном режиме (в standalone-HTML моста нет, потому там
+        // фризов и не было).
+        window.lunaOnTraffic = function (rx, tx) {
             try {
-                const [rx, tx] = Bridge.getTraffic().split(',').map(Number);
                 const now = Date.now();
                 if (prevTraffic) {
                     const dt = (now - prevTraffic.t) / 1000 || 1;
@@ -383,7 +385,7 @@
                 }
                 prevTraffic = { rx, tx, t: now };
             } catch (_) {}
-        }
+        };
 
         window.lunaOnIp = function (jsonStr) {
             try {
@@ -425,8 +427,8 @@
             clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
             prevTraffic = null;
-            clearInterval(statsInterval);
-            statsInterval = setInterval(pollTraffic, 1500);
+            // Запускаем ПУШ трафика из Kotlin (опрос ядра идёт на фоновом потоке там).
+            if (Bridge && Bridge.startTraffic) Bridge.startTraffic();
             ipInfo.textContent = 'Проверка IP…';
             ipInfo.style.display = 'block';
             if (Bridge && Bridge.requestIp) Bridge.requestIp();
@@ -445,7 +447,7 @@
             ipInfo.style.display = 'none';
             ipInfo.textContent = '';
             clearInterval(timerInterval);
-            clearInterval(statsInterval);
+            if (Bridge && Bridge.stopTraffic) Bridge.stopTraffic();
             prevTraffic = null;
         }
 
@@ -585,14 +587,13 @@
             document.documentElement.classList.toggle('app-paused', hidden);
             if (hidden) {
                 clearInterval(timerInterval); timerInterval = null;
-                clearInterval(statsInterval); statsInterval = null;
+                if (Bridge && Bridge.stopTraffic) Bridge.stopTraffic();
             } else if (isConnected) {
                 updateTimer();
                 clearInterval(timerInterval);
                 timerInterval = setInterval(updateTimer, 1000);
-                clearInterval(statsInterval);
                 prevTraffic = null;
-                statsInterval = setInterval(pollTraffic, 1500);
+                if (Bridge && Bridge.startTraffic) Bridge.startTraffic();
             }
         });
 
