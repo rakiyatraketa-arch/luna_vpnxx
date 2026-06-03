@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Apex VPN</title>
     <style>
-        /* Шрифты: Orbitron — техно-жирный для бренда APEX VPN; Inter — основной UI
-           (как в презентации). display=swap: пока грузится, показываем системный
-           фолбэк (ниже в font-family), поэтому даже офлайн интерфейс остаётся жирным. */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap');
+        /* Шрифт Inter (как в презентации Apex VPN) — поддержка кириллицы, начертания
+           300–800 для красивой иерархии. display=swap: пока грузится, показываем
+           системный фолбэк, поэтому интерфейс остаётся читаемым даже офлайн. */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         :root {
             /* Палитра Apex (из презентации): белый фон + синие акценты. */
             --bg: #eef3fb;
@@ -51,24 +51,18 @@
             --splash-text: #f9fafb;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        /* Бренд APEX VPN — техно-жирный Orbitron, заглавные, синий градиент (как в презентации). */
+        /* Бренд APEX VPN — шрифт Inter (как в презентации), жирный, синий. */
         .splash-title, .app-title {
-            font-family: 'Orbitron', 'Inter', sans-serif !important;
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif !important;
             font-weight: 800 !important;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #1e3c72, #2a5298, #6b8cce);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent !important;
+            letter-spacing: -0.5px;
+            color: #2a5298 !important;
         }
         [data-theme="dark"] .splash-title, [data-theme="dark"] .app-title {
-            background: linear-gradient(135deg, #6b8cce, #9ab8ec, #c0d9fc);
-            -webkit-background-clip: text;
-            background-clip: text;
+            color: #6b8cce !important;
         }
-        /* SVG-щит логотипа (как logo-icon-3d из презентации) внутри белой скруглённой плашки. */
-        .apex-logo-svg { width: 66%; height: 66%; display: block; filter: drop-shadow(0 4px 8px rgba(43, 95, 158, 0.25)); }
+        /* Логотип Apex (newlogo.png) — синий щит, как иконка приложения. */
+        .apex-logo-img { width: 100%; height: 100%; object-fit: contain; display: block; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #ffffff 0%, #eef4ff 40%, #f5f8ff 70%, #e8effb 100%);
@@ -261,7 +255,7 @@
         <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
                 <div class="splash-logo-wrap">
-                    <div class="splash-logo"><svg class="apex-logo-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="Apex VPN"><defs><linearGradient id="apexGradSplash" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e3c72"/><stop offset="55%" stop-color="#2a5298"/><stop offset="100%" stop-color="#6b8cce"/></linearGradient></defs><path d="M12 1.8 L20.2 5 V11 C20.2 16.4 16.6 20.6 12 22.2 C7.4 20.6 3.8 16.4 3.8 11 V5 Z" fill="url(#apexGradSplash)"/><path d="M8.4 12.3 l2.6 2.6 l4.7-5.3" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/></svg></div>
+                    <div class="splash-logo"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
                 </div>
                 <div class="splash-title">Apex VPN</div>
                 <div class="splash-dots"><span></span><span></span><span></span></div>
@@ -271,7 +265,7 @@
         <div class="app-content">
             <div class="app-header">
                 <div class="app-logo">
-                    <div class="logo-icon"><svg class="apex-logo-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="Apex VPN"><defs><linearGradient id="apexGradHeader" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e3c72"/><stop offset="55%" stop-color="#2a5298"/><stop offset="100%" stop-color="#6b8cce"/></linearGradient></defs><path d="M12 1.8 L20.2 5 V11 C20.2 16.4 16.6 20.6 12 22.2 C7.4 20.6 3.8 16.4 3.8 11 V5 Z" fill="url(#apexGradHeader)"/><path d="M8.4 12.3 l2.6 2.6 l4.7-5.3" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/></svg></div>
+                    <div class="logo-icon"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
                     <div class="app-title">Apex VPN</div>
                 </div>
                 <div class="header-actions"><button class="icon-btn" id="settingsBtn">⚙️</button></div>
