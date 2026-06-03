@@ -72,16 +72,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Reloads the server list based on current subscription filter.
+     *
+     * The heavy work (reading every profile from MMKV + JSON decode) is done on a
+     * background dispatcher; only the shared-state swap and LiveData notification run
+     * on the main thread. Previously this ran fully on the caller's thread (often the
+     * UI thread from onCreate / search keystrokes), causing the connect/launch freeze.
      */
     fun reloadServerList() {
-        serverList = if (subscriptionId.isEmpty()) {
-            MmkvManager.decodeAllServerList()
-        } else {
-            MmkvManager.decodeServerList(subscriptionId)
+        viewModelScope.launch(Dispatchers.Default) {
+            val newList = if (subscriptionId.isEmpty()) {
+                MmkvManager.decodeAllServerList()
+            } else {
+                MmkvManager.decodeServerList(subscriptionId)
+            }
+            val newCache = buildServersCache(newList)
+            withContext(Dispatchers.Main) {
+                serverList = newList
+                serversCache.clear()
+                serversCache.addAll(newCache)
+                updateListAction.value = -1
+            }
         }
-
-        updateCache()
-        updateListAction.value = -1
     }
 
     /**
@@ -114,21 +125,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Updates the cache of servers.
+     * Updates the cache of servers (synchronous, in-place). Prefer [reloadServerList]
+     * from UI code so the decode happens off the main thread.
      */
     @Synchronized
     fun updateCache() {
+        val newCache = buildServersCache(serverList)
         serversCache.clear()
+        serversCache.addAll(newCache)
+    }
+
+    /**
+     * Decodes the given GUID list into [ServersCache] entries, applying the current
+     * keyword filter. Pure/CPU-bound work — safe to call from a background dispatcher.
+     */
+    private fun buildServersCache(list: List<String>): List<ServersCache> {
+        val result = mutableListOf<ServersCache>()
         val kw = keywordFilter.trim()
         val searchRegex = try {
             if (kw.isNotEmpty()) Regex(kw, setOf(RegexOption.IGNORE_CASE)) else null
         } catch (e: PatternSyntaxException) {
             null // Fallback to literal search if regex is invalid
         }
-        for (guid in serverList) {
+        for (guid in list) {
             val profile = MmkvManager.decodeServerConfig(guid) ?: continue
             if (kw.isEmpty()) {
-                serversCache.add(ServersCache(guid, profile))
+                result.add(ServersCache(guid, profile))
                 continue
             }
 
@@ -141,9 +163,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 || server.matchesPattern(searchRegex, kw)
                 || protocol.matchesPattern(searchRegex, kw)
             ) {
-                serversCache.add(ServersCache(guid, profile))
+                result.add(ServersCache(guid, profile))
             }
         }
+        return result
     }
 
     /**

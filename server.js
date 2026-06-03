@@ -22,7 +22,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const net = require('net');
-const { spawn, spawnSync } = require('child_process');
+const { spawn, spawnSync, execFile } = require('child_process');
 
 // ===================== Конфигурация =====================
 
@@ -31,16 +31,24 @@ const SOCKS_PORT = 1080;      // SOCKS5 для приложений
 const HTTP_PROXY_PORT = 1081; // HTTP-прокси (используется и для проверки IP)
 const API_PORT = 10085;       // gRPC API xray для статистики
 
-// Основной (рабочий) линк. Все локации по умолчанию указывают на него,
-// чтобы подключение всегда работало. Впиши сюда свои реальные линки для
-// других стран — и дропдаун станет по-настоящему мультисерверным.
-const DEFAULT_LINK = 'vless://dda41cb1-c9e9-4fb0-8ef8-5cf051d55003@finlandbox.space:443?security=reality&encryption=none&pbk=PXtzIrCwLrvgGHBRqZBB-mPOUvlwWiPbuGWsoloxDjc&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=www.max.ru&sid=74#dasd';
+// Лимиты, защищающие от исчерпания памяти на localhost-эндпоинтах.
+const MAX_BODY_BYTES = 64 * 1024;
+const MAX_IP_RESP_BYTES = 256 * 1024;
+
+// VLESS-линки берём из окружения, чтобы НЕ хранить реальные ключи/UUID в коде.
+//   LUNA_VLESS_LINK         — основной линк (fallback для всех стран)
+//   LUNA_LINK_DE/NL/US/SG   — линки конкретных стран (необязательно)
+// ВНИМАНИЕ: значение ниже — лишь нерабочая заглушка. Реальный линк, который
+// раньше был захардкожен здесь, СКОМПРОМЕТИРОВАН (лежал в исходниках) — на
+// сервере его UUID и Reality-ключи нужно перевыпустить.
+const PLACEHOLDER_LINK = 'vless://00000000-0000-0000-0000-000000000000@example.com:443?security=reality&encryption=none&type=tcp&sni=www.example.com#placeholder';
+const DEFAULT_LINK = process.env.LUNA_VLESS_LINK || PLACEHOLDER_LINK;
 
 const SERVERS = {
-    'Германия (Быстрый)': DEFAULT_LINK,
-    'Нидерланды':         DEFAULT_LINK, // ← замени на свой линк для NL
-    'США (Нью-Йорк)':     DEFAULT_LINK, // ← замени на свой линк для US
-    'Сингапур':           DEFAULT_LINK, // ← замени на свой линк для SG
+    'Германия (Быстрый)': process.env.LUNA_LINK_DE || DEFAULT_LINK,
+    'Нидерланды':         process.env.LUNA_LINK_NL || DEFAULT_LINK,
+    'США (Нью-Йорк)':     process.env.LUNA_LINK_US || DEFAULT_LINK,
+    'Сингапур':           process.env.LUNA_LINK_SG || DEFAULT_LINK,
 };
 
 const CONFIG_PATH = path.join(__dirname, '.xray-config.json');
@@ -156,72 +164,107 @@ let xrayProc = null;
 let currentCountry = null;
 
 function stopXray() {
-    if (xrayProc) {
-        try { xrayProc.kill(); } catch (_) {}
-        xrayProc = null;
-    }
+    if (!xrayProc) return;
+    const proc = xrayProc;
+    xrayProc = null;
+    // Снимаем слушатели, чтобы при пересоздании процесса не текли listeners и
+    // 'exit' старого процесса не трактовался как ошибка нового.
+    proc.removeAllListeners('exit');
+    proc.removeAllListeners('error');
+    try {
+        proc.kill();
+        // На Windows SIGTERM ненадёжен — добиваем дерево процессов принудительно,
+        // иначе xray может держать порты 1080/1081/10085 и следующий старт упадёт.
+        if (process.platform === 'win32' && proc.pid) {
+            try { spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F']); } catch (_) {}
+        }
+    } catch (_) {}
 }
 
-function startXray(country) {
-    return new Promise((resolve, reject) => {
-        const bin = findXray();
-        if (!bin) {
-            return reject(new Error('Бинарник xray не найден. Положи xray.exe рядом с server.js или задай XRAY_PATH.'));
-        }
-        const link = SERVERS[country] || DEFAULT_LINK;
-        let cfg;
-        try {
-            cfg = buildConfig(parseVless(link));
-        } catch (e) {
-            return reject(new Error('Не удалось разобрать VLESS-ссылку: ' + e.message));
-        }
-        fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
-
-        const proc = spawn(bin, ['run', '-c', CONFIG_PATH]);
-        xrayProc = proc;
-        currentCountry = country;
-
-        let settled = false;
-        const finishOk = () => { if (!settled) { settled = true; resolve(); } };
-        const finishErr = (e) => { if (!settled) { settled = true; reject(e); } };
-
-        const onData = (d) => {
-            const s = d.toString();
-            process.stdout.write('[xray] ' + s);
-            if (/started/i.test(s)) finishOk();
-            if (/failed to start|panic|config error/i.test(s)) finishErr(new Error(s.trim().split('\n').pop()));
+// Ждём, пока порт начнёт слушать (xray реально поднялся), или таймаут.
+function waitForPort(port, host, timeoutMs) {
+    return new Promise((resolve) => {
+        const deadline = Date.now() + timeoutMs;
+        const tryOnce = () => {
+            const s = net.connect(port, host);
+            s.once('connect', () => { s.destroy(); resolve(true); });
+            s.once('error', () => {
+                s.destroy();
+                if (Date.now() >= deadline) resolve(false);
+                else setTimeout(tryOnce, 200);
+            });
         };
-        proc.stdout.on('data', onData);
-        proc.stderr.on('data', onData);
-        proc.on('error', finishErr);
-        proc.on('exit', (code) => {
-            if (xrayProc === proc) xrayProc = null;
-            finishErr(new Error('xray завершился с кодом ' + code));
-        });
-
-        // запасной путь: если явного "started" нет — считаем запущенным через 1.8с
-        setTimeout(finishOk, 1800);
+        tryOnce();
     });
+}
+
+async function startXray(country) {
+    const bin = findXray();
+    if (!bin) {
+        throw new Error('Бинарник xray не найден. Положи xray.exe рядом с server.js или задай XRAY_PATH.');
+    }
+    const link = SERVERS[country] || DEFAULT_LINK;
+    let cfg;
+    try {
+        cfg = buildConfig(parseVless(link));
+    } catch (e) {
+        throw new Error('Не удалось разобрать VLESS-ссылку: ' + e.message);
+    }
+    await fs.promises.writeFile(CONFIG_PATH, JSON.stringify(cfg, null, 2));
+
+    const proc = spawn(bin, ['run', '-c', CONFIG_PATH]);
+    xrayProc = proc;
+    currentCountry = country;
+
+    let exitedEarly = null;
+    const onData = (d) => {
+        const s = d.toString();
+        process.stdout.write('[xray] ' + s);
+    };
+    proc.stdout.on('data', onData);
+    proc.stderr.on('data', onData);
+    proc.on('error', (e) => { exitedEarly = e; });
+    proc.on('exit', (code) => {
+        if (xrayProc === proc) xrayProc = null;
+        if (exitedEarly == null) exitedEarly = new Error('xray завершился с кодом ' + code);
+    });
+
+    // Подтверждаем запуск тем, что SOCKS-порт реально начал слушать.
+    // Раньше успех возвращался по слепому таймауту 1.8с — даже если xray упал.
+    const ready = await waitForPort(SOCKS_PORT, '127.0.0.1', 8000);
+    if (exitedEarly) throw exitedEarly;
+    if (!ready) {
+        stopXray();
+        throw new Error('xray не открыл SOCKS-порт за отведённое время');
+    }
 }
 
 // ===================== Статистика (xray api) =====================
 
 function queryStats() {
-    const bin = findXray();
-    if (!bin || !xrayProc) return { up: 0, down: 0 };
-    const r = spawnSync(bin, ['api', 'statsquery', '--server=127.0.0.1:' + API_PORT], { encoding: 'utf8' });
-    if (r.status !== 0 || !r.stdout) return { up: 0, down: 0 };
-    try {
-        const data = JSON.parse(r.stdout);
-        let up = 0, down = 0;
-        for (const s of (data.stat || [])) {
-            if (s.name === 'outbound>>>proxy>>>traffic>>>uplink') up = Number(s.value || 0);
-            if (s.name === 'outbound>>>proxy>>>traffic>>>downlink') down = Number(s.value || 0);
-        }
-        return { up, down };
-    } catch (_) {
-        return { up: 0, down: 0 };
-    }
+    return new Promise((resolve) => {
+        const bin = findXray();
+        if (!bin || !xrayProc) return resolve({ up: 0, down: 0 });
+        execFile(
+            bin,
+            ['api', 'statsquery', '--server=127.0.0.1:' + API_PORT],
+            { encoding: 'utf8', timeout: 5000 },
+            (err, stdout) => {
+                if (err || !stdout) return resolve({ up: 0, down: 0 });
+                try {
+                    const data = JSON.parse(stdout);
+                    let up = 0, down = 0;
+                    for (const s of (data.stat || [])) {
+                        if (s.name === 'outbound>>>proxy>>>traffic>>>uplink') up = Number(s.value || 0);
+                        if (s.name === 'outbound>>>proxy>>>traffic>>>downlink') down = Number(s.value || 0);
+                    }
+                    resolve({ up, down });
+                } catch (_) {
+                    resolve({ up: 0, down: 0 });
+                }
+            }
+        );
+    });
 }
 
 // ===================== Проверка IP через HTTP-прокси =====================
@@ -239,7 +282,10 @@ function checkIp() {
             );
         });
         let buf = '';
-        socket.on('data', (d) => { buf += d.toString(); });
+        socket.on('data', (d) => {
+            buf += d.toString();
+            if (buf.length > MAX_IP_RESP_BYTES) { socket.destroy(); resolve(null); }
+        });
         socket.on('end', () => {
             const m = buf.match(/\{[\s\S]*\}/);
             if (m) { try { return resolve(JSON.parse(m[0])); } catch (_) {} }
@@ -258,19 +304,54 @@ function sendJson(res, code, obj) {
 }
 
 function readBody(req) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         let b = '';
-        req.on('data', (c) => { b += c; });
+        let len = 0;
+        req.on('data', (c) => {
+            len += c.length;
+            if (len > MAX_BODY_BYTES) {
+                req.destroy();
+                reject(new Error('request body too large'));
+                return;
+            }
+            b += c;
+        });
         req.on('end', () => resolve(b));
+        req.on('error', reject);
     });
+}
+
+// Защита от DNS-rebinding и CSRF: управляющие эндпоинты доступны только
+// с самого localhost. Проверяем Host и (если есть) Origin.
+function isLocalRequest(req) {
+    const allowedHosts = ['127.0.0.1:' + PORT, 'localhost:' + PORT, '[::1]:' + PORT];
+    const host = (req.headers.host || '').toLowerCase();
+    if (!allowedHosts.includes(host)) return false;
+
+    const origin = req.headers.origin;
+    if (origin) {
+        try {
+            const o = new URL(origin);
+            const okHost = ['127.0.0.1', 'localhost', '::1', '[::1]'].includes(o.hostname);
+            if (!okHost || o.port !== String(PORT)) return false;
+        } catch (_) {
+            return false;
+        }
+    }
+    return true;
 }
 
 const server = http.createServer(async (req, res) => {
     try {
         if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
-            const html = fs.readFileSync(path.join(__dirname, 'index.html'));
+            const html = await fs.promises.readFile(path.join(__dirname, 'index.html'));
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
             return res.end(html);
+        }
+
+        // Все /api/* — только с локального origin
+        if (req.url.startsWith('/api/') && !isLocalRequest(req)) {
+            return sendJson(res, 403, { error: 'forbidden' });
         }
 
         if (req.method === 'GET' && req.url === '/api/health') {
@@ -281,6 +362,10 @@ const server = http.createServer(async (req, res) => {
             const body = await readBody(req);
             let country = null;
             try { country = JSON.parse(body || '{}').country; } catch (_) {}
+            // Берём только известные ключи, иначе DEFAULT_LINK (защита от prototype lookup)
+            if (country != null && !Object.prototype.hasOwnProperty.call(SERVERS, country)) {
+                country = null;
+            }
             stopXray();
             try {
                 await startXray(country);
@@ -298,7 +383,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         if (req.method === 'GET' && req.url === '/api/stats') {
-            return sendJson(res, 200, queryStats());
+            return sendJson(res, 200, await queryStats());
         }
 
         if (req.method === 'GET' && req.url === '/api/ip') {
@@ -319,6 +404,12 @@ server.listen(PORT, '127.0.0.1', () => {
     console.log(' SOCKS5 прокси:             127.0.0.1:' + SOCKS_PORT);
     console.log(' HTTP прокси:               127.0.0.1:' + HTTP_PROXY_PORT);
     console.log(' xray бинарник:             ' + (bin || 'НЕ НАЙДЕН — положи xray.exe рядом или задай XRAY_PATH'));
+    if (DEFAULT_LINK === PLACEHOLDER_LINK) {
+        console.log('------------------------------------------------------');
+        console.log(' ВНИМАНИЕ: задан линк-заглушка. Подключение НЕ заработает.');
+        console.log(' Задай реальный линк в переменной окружения LUNA_VLESS_LINK');
+        console.log(' (и при желании LUNA_LINK_DE/NL/US/SG для отдельных стран).');
+    }
     console.log('======================================================');
 });
 

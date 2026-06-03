@@ -286,7 +286,14 @@ object MmkvManager {
      */
     fun removeAllServer(): Int {
         val count = profileFullStorage.allKeys()?.count() ?: 0
-        mainStorage.clearAll()
+        // Remove only server-related entries from mainStorage. clearAll() previously also
+        // wiped the subscription id list (KEY_SUB_IDS) and the WebDAV backup config
+        // (KEY_WEBDAV_CONFIG), which are not "servers" — that was data loss.
+        mainStorage.remove(KEY_SELECTED_SERVER)
+        mainStorage.remove(KEY_ANG_CONFIGS)
+        mainStorage.allKeys()
+            ?.filter { it.startsWith(KEY_SUB_SERVER_PREFIX) }
+            ?.forEach { mainStorage.remove(it) }
         profileFullStorage.clearAll()
         serverAffStorage.clearAll()
         return count

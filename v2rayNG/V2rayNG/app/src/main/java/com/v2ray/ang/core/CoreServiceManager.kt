@@ -510,9 +510,19 @@ object CoreServiceManager {
 
                 AppConfig.MSG_STATE_RESTART -> {
                     LogUtil.i(AppConfig.TAG, "StartCore-Manager: Restart service")
-                    serviceControl.stopService()
-                    Thread.sleep(500L)
-                    startVService(serviceControl.getService())
+                    // onReceive идёт на главном потоке. Остановка ядра (нативный stopLoop +
+                    // закрытие TUN) + Thread.sleep тяжёлые — уносим всю последовательность
+                    // restart в фон, иначе UI замирает на ~0.5с+ при смене сервера («фриз»).
+                    val svc = serviceControl.getService()
+                    Thread {
+                        serviceControl.stopService()
+                        try {
+                            Thread.sleep(500L)
+                        } catch (e: InterruptedException) {
+                            LogUtil.w(AppConfig.TAG, "StartCore-Manager: Restart sleep interrupted", e)
+                        }
+                        startVService(svc)
+                    }.start()
                 }
 
                 AppConfig.MSG_MEASURE_DELAY -> {

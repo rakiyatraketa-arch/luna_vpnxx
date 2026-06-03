@@ -724,7 +724,14 @@ object CoreConfigManager {
             val userHostsMap = userHosts?.split(",")
                 ?.filter { it.isNotEmpty() }
                 ?.filter { it.contains(":") }
-                ?.associate { it.split(":").let { (k, v) -> k to v } }
+                ?.mapNotNull {
+                    // limit = 2 so values containing ':' (IPv6, "host:a:b") don't crash destructuring
+                    val parts = it.split(":", limit = 2)
+                    val k = parts.getOrNull(0)?.trim().orEmpty()
+                    val v = parts.getOrNull(1)?.trim().orEmpty()
+                    if (k.isNotEmpty() && v.isNotEmpty()) k to v else null
+                }
+                ?.toMap()
             if (userHostsMap != null) {
                 hosts.putAll(userHostsMap)
             }

@@ -8,7 +8,6 @@ import go.Seq
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import libv2ray.Libv2ray
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * V2Ray Native Library Manager
@@ -17,29 +16,37 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Provides initialization protection and unified API for V2Ray core operations.
  */
 object CoreNativeManager {
-    private val initialized = AtomicBoolean(false)
+    @Volatile
+    private var initialized = false
+    private val initLock = Any()
 
     /**
      * Initialize V2Ray core environment.
      * This method is thread-safe and ensures initialization happens only once.
-     * Subsequent calls will be ignored silently.
-     *
+     * Concurrent callers block on [initLock] until initialization truly completes,
+     * so the core is never used before it is actually ready.
      */
     fun initCoreEnv(context: Context?) {
-        if (initialized.compareAndSet(false, true)) {
+        if (initialized) {
+            LogUtil.d(AppConfig.TAG, "V2Ray core environment already initialized, skipping")
+            return
+        }
+        synchronized(initLock) {
+            if (initialized) {
+                LogUtil.d(AppConfig.TAG, "V2Ray core environment already initialized, skipping")
+                return
+            }
             try {
                 Seq.setContext(context?.applicationContext)
                 val assetPath = Utils.userAssetPath(context)
                 val deviceId = Utils.getDeviceIdForXUDPBaseKey()
                 Libv2ray.initCoreEnv(assetPath, deviceId)
+                initialized = true
                 LogUtil.i(AppConfig.TAG, "V2Ray core environment initialized successfully")
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.TAG, "Failed to initialize V2Ray core environment", e)
-                initialized.set(false)
                 throw e
             }
-        } else {
-            LogUtil.d(AppConfig.TAG, "V2Ray core environment already initialized, skipping")
         }
     }
 

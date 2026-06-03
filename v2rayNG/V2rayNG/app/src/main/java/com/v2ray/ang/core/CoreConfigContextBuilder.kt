@@ -139,11 +139,23 @@ object CoreConfigContextBuilder {
     private fun resolvePolicyGroupProfiles(config: ProfileItem): List<ProfileItem> {
         try {
             val serverList = MmkvManager.decodeAllServerList()
+            val subscriptionId = config.policyGroupSubscriptionId
+            // Compile the filter regex ONCE up front instead of recompiling it for every
+            // server in the list (was O(N) regex compiles on the connect hot path).
+            val filter = config.policyGroupFilter
+            val filterRegex = if (filter.isNullOrBlank()) {
+                null
+            } else {
+                try {
+                    Regex(filter)
+                } catch (_: Exception) {
+                    null // invalid pattern -> fall back to literal contains below
+                }
+            }
             return serverList
                 .asSequence()
                 .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
                 .filter { profile ->
-                    val subscriptionId = config.policyGroupSubscriptionId
                     if (subscriptionId.isNullOrBlank()) {
                         true
                     } else {
@@ -151,15 +163,10 @@ object CoreConfigContextBuilder {
                     }
                 }
                 .filter { profile ->
-                    val filter = config.policyGroupFilter
-                    if (filter.isNullOrBlank()) {
-                        true
-                    } else {
-                        try {
-                            Regex(filter).containsMatchIn(profile.remarks)
-                        } catch (_: Exception) {
-                            profile.remarks.contains(filter)
-                        }
+                    when {
+                        filter.isNullOrBlank() -> true
+                        filterRegex != null -> filterRegex.containsMatchIn(profile.remarks)
+                        else -> profile.remarks.contains(filter)
                     }
                 }
                 .filter { it.server.isNotNullEmpty() }
