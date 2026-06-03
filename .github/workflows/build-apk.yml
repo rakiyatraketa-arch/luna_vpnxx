@@ -1,4 +1,4 @@
-name: Build Luna VPN APK
+name: Build Apex VPN APK
 
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: luna-vpn-debug
+        name: apex-vpn-debug
         path: v2rayNG/V2rayNG/app/build/outputs/apk/fdroid/debug/*.apk
         retention-days: 30
 
@@ -58,7 +58,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success()
       with:
-        name: luna-vpn-release
+        name: apex-vpn-release
         path: v2rayNG/V2rayNG/app/build/outputs/apk/fdroid/release/*.apk
         retention-days: 30
       continue-on-error: true

@@ -1,4 +1,4 @@
-name: Build Luna VPN APK
+name: Build Apex VPN APK
 
 on:
   push:
@@ -97,7 +97,7 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: luna-vpn-apk
+        name: apex-vpn-apk
         path: V2rayNG/app/build/outputs/apk/**/*.apk
         if-no-files-found: error
         retention-days: 30
