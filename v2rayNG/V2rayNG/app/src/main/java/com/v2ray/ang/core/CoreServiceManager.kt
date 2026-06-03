@@ -51,7 +51,10 @@ object CoreServiceManager {
         set(value) {
             field = value
             val service = value?.get()?.getService()
-            CoreNativeManager.initCoreEnv(service)
+            // ВНИМАНИЕ: initCoreEnv здесь НЕ вызываем — этот сеттер исполняется в
+            // onCreate сервиса на ГЛАВНОМ потоке, а нативный init блокировал бы UI
+            // (фриз при первом Connect). Прогрев идёт в фоне из AngApplication, а
+            // гарантированный (идемпотентный) init — в doStartCoreLoop на фоне.
             if (service != null && processFinder == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 processFinder = XrayProcessFinder(service)
                 coreController.registerProcessFinder(processFinder)
@@ -222,6 +225,10 @@ object CoreServiceManager {
 
     @Throws(Exception::class)
     private fun doStartCoreLoop(service: Service, vpnInterface: ParcelFileDescriptor?) {
+        // Гарантируем готовность нативной среды ядра (идемпотентно). Для VPN-режима
+        // выполняется на фоновом потоке из onStartCommand, поэтому UI не блокируется.
+        CoreNativeManager.initCoreEnv(service)
+
         val guid = MmkvManager.getSelectServer() ?: error("No server selected")
         val config = MmkvManager.decodeServerConfig(guid) ?: error("Failed to decode server config")
 

@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
+import com.v2ray.ang.core.CoreNativeManager
 import com.v2ray.ang.handler.SettingsManager
 
 class AngApplication : MultiDexApplication() {
@@ -44,5 +45,18 @@ class AngApplication : MultiDexApplication() {
         es.dmoral.toasty.Toasty.Config.getInstance()
             .setGravity(android.view.Gravity.BOTTOM, 0, 300)
             .apply()
+
+        // Прогреваем нативную среду ядра xray В ФОНЕ при старте приложения.
+        // Иначе Libv2ray.initCoreEnv (asset-путь geoip/geosite + device id) выполнялся
+        // на главном потоке при ПЕРВОМ подключении (через сеттер serviceControl в
+        // onCreate сервиса) и вызывал фриз при нажатии Connect. initCoreEnv идемпотентен,
+        // так что последующие вызовы — мгновенный no-op.
+        Thread {
+            try {
+                CoreNativeManager.initCoreEnv(applicationContext)
+            } catch (e: Exception) {
+                // не критично: будет повторно (и тоже в фоне) перед стартом ядра
+            }
+        }.start()
     }
 }
