@@ -1,14 +1,15 @@
 /**
- * Apex VPN — backend профиля и платежей (AyfoPay).
+ * Apex VPN — backend аккаунтов и платежей (AyfoPay).
  *
  * Зачем: платёжный ключ AyfoPay — СЕРВЕРНЫЙ секрет (им же проверяется подпись
  * webhook). В мобильное приложение его класть нельзя — извлекается из APK.
  * Поэтому приложение зовёт ЭТОТ сервер, а сервер уже ходит в AyfoPay.
  *
- * Хранит:
- *   - профиль пользователя, привязанный к HWID устройства (один HWID = один профиль);
- *   - баланс пользователя (рубли) — пополняется через AyfoPay;
- *   - срок подписки (subUntil, ms) — тарифы покупаются списанием с баланса;
+ * Аккаунты: вход по логину (нику) + паролю. Один аккаунт работает на нескольких
+ * устройствах (массив токенов). Пароли хранятся только в виде pbkdf2-хэша с солью.
+ *
+ * Хранит (JSON-файлы в DATA_DIR, атомарная запись, переживают перезапуск):
+ *   - аккаунты: логин, userId, хэш пароля, баланс (₽), срок подписки (subUntil, ms), токены;
  *   - заказы пополнения (по id платежа AyfoPay) для надёжной обработки webhook.
  *
  * Зависимостей нет — только встроенные модули Node.js.
@@ -42,6 +43,10 @@ const API_KEY = process.env.AYFOPAY_API_KEY || '';
 const AYFOPAY_HOST = 'api.ayfopay.com';
 const MAX_BODY = 32 * 1024;
 
+// Лимиты пополнения баланса (рубли). Любая сумма в этом диапазоне.
+const MIN_TOPUP = 50;
+const MAX_TOPUP = 50000;
+
 if (!API_KEY) {
     console.warn('[apex] ВНИМАНИЕ: AYFOPAY_API_KEY не задан — оплата работать не будет.');
 }
@@ -54,10 +59,6 @@ const PLANS = [
     { id: '12m', title: '1 год', months: 12, days: 365, price: 1400 },
 ];
 const planById = (id) => PLANS.find((p) => p.id === id) || null;
-
-// Лимиты пополнения баланса (рубли). Любая сумма в этом диапазоне.
-const MIN_TOPUP = 50;
-const MAX_TOPUP = 50000;
 
 // ===================== Хранилище (JSON-файлы) =====================
 
@@ -80,67 +81,81 @@ function saveJson(file, obj) {
     fs.renameSync(tmp, full); // атомарная замена
 }
 
-// users: { [hwid]: { userId, hwid, subUntil, balance, createdAt } }
-let users = loadJson('users.json', {});
-// orders: { [ayfoPaymentId]: { type:'topup', userId, hwid, amount, method, status, createdAt, paidAt } }
-// (type 'plan' — историческая покупка тарифа напрямую; новые покупки тарифа идут с баланса без AyfoPay)
+// accounts: { [loginKey]: { login, userId, salt, hash, subUntil, balance, tokens:[], hwids:[], createdAt } }
+let accounts = loadJson('accounts.json', {});
+// orders: { [ayfoPaymentId]: { type:'topup', orderId, loginKey, login, userId, amount, method, status, createdAt, paidAt } }
 let orders = loadJson('orders.json', {});
 
-function persistUsers() { saveJson('users.json', users); }
+function persistAccounts() { saveJson('accounts.json', accounts); }
 function persistOrders() { saveJson('orders.json', orders); }
 
-// ===================== Профиль / HWID =====================
+// ===================== Аккаунты / авторизация =====================
 
 function newUserId() {
     // короткий читаемый id, например APX-9F3A2B7C
     return 'APX-' + crypto.randomBytes(4).toString('hex').toUpperCase();
 }
 
-function normalizeHwid(hwid) {
-    return String(hwid || '').trim().toUpperCase().replace(/[^A-F0-9]/g, '').slice(0, 64);
+function normLogin(s) { return String(s || '').trim(); }
+function loginKey(s) { return normLogin(s).toLowerCase(); }
+// Логин: латиница/цифры/подчёркивание, 3–32 символа
+function isValidLogin(s) { return /^[A-Za-z0-9_]{3,32}$/.test(s); }
+
+function hashPassword(password, salt) {
+    return crypto.pbkdf2Sync(String(password), salt, 120000, 32, 'sha256').toString('hex');
+}
+function verifyPassword(acct, password) {
+    if (!acct || !acct.salt || !acct.hash) return false;
+    const h = hashPassword(password, acct.salt);
+    const a = Buffer.from(h, 'hex');
+    const b = Buffer.from(acct.hash, 'hex');
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+}
+function newToken() { return crypto.randomBytes(32).toString('hex'); }
+
+function accountByToken(token) {
+    if (!token) return null;
+    for (const k of Object.keys(accounts)) {
+        const a = accounts[k];
+        if (Array.isArray(a.tokens) && a.tokens.indexOf(token) !== -1) return a;
+    }
+    return null;
+}
+// Токен берём из тела запроса или заголовка Authorization
+function tokenFromReq(data, req) {
+    if (data && data.token) return String(data.token);
+    const h = req.headers['authorization'] || '';
+    return h ? String(h).replace(/^Bearer\s+/i, '').trim() : '';
 }
 
-function getOrCreateUser(hwidRaw) {
-    const hwid = normalizeHwid(hwidRaw);
-    if (!hwid || hwid.length < 8) return null;
-    if (!users[hwid]) {
-        users[hwid] = {
-            userId: newUserId(),
-            hwid,
-            subUntil: 0,
-            balance: 0,
-            createdAt: Date.now(),
-        };
-        persistUsers();
-    }
-    // Миграция старых профилей без поля balance
-    if (typeof users[hwid].balance !== 'number') {
-        users[hwid].balance = 0;
-        persistUsers();
-    }
-    return users[hwid];
-}
-
-function publicProfile(u) {
+function publicProfile(a) {
     const now = Date.now();
-    const active = u.subUntil > now;
-    const daysLeft = active ? Math.ceil((u.subUntil - now) / 86400000) : 0;
+    const active = a.subUntil > now;
+    const daysLeft = active ? Math.ceil((a.subUntil - now) / 86400000) : 0;
     return {
-        userId: u.userId,
-        hwid: u.hwid,
-        subUntil: u.subUntil,
+        userId: a.userId,
+        login: a.login,
+        subUntil: a.subUntil,
         active,
         daysLeft,
-        balance: u.balance || 0,
+        balance: a.balance || 0,
         plans: PLANS,
     };
 }
 
-function extendSubscription(u, days) {
+function extendSubscription(a, days) {
     const now = Date.now();
-    const base = u.subUntil > now ? u.subUntil : now; // продлеваем, не теряя остаток
-    u.subUntil = base + days * 86400000;
-    persistUsers();
+    const base = a.subUntil > now ? a.subUntil : now; // продлеваем, не теряя остаток
+    a.subUntil = base + days * 86400000;
+    persistAccounts();
+}
+
+function rememberHwid(acct, hwidRaw) {
+    const hwid = String(hwidRaw || '').trim().toUpperCase().replace(/[^A-F0-9]/g, '').slice(0, 64);
+    if (!hwid || hwid.length < 8) return;
+    if (!Array.isArray(acct.hwids)) acct.hwids = [];
+    if (acct.hwids.indexOf(hwid) === -1) { acct.hwids.push(hwid); acct.hwids = acct.hwids.slice(-10); }
 }
 
 // ===================== AyfoPay =====================
@@ -202,7 +217,7 @@ function sendJson(res, code, obj) {
     res.writeHead(code, {
         'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     });
     res.end(body);
@@ -221,6 +236,10 @@ function readBody(req) {
         req.on('error', reject);
     });
 }
+async function readJson(req) {
+    const body = await readBody(req);
+    try { return JSON.parse(body || '{}'); } catch (_) { return {}; }
+}
 
 const server = http.createServer(async (req, res) => {
     try {
@@ -234,38 +253,91 @@ const server = http.createServer(async (req, res) => {
             return sendJson(res, 200, { plans: PLANS });
         }
 
-        // Профиль по HWID (создаётся при первом обращении)
-        if ((req.method === 'POST' || req.method === 'GET') && route === '/api/profile') {
-            let hwid = url.searchParams.get('hwid');
-            if (req.method === 'POST') {
-                const body = await readBody(req);
-                try { hwid = JSON.parse(body || '{}').hwid || hwid; } catch (_) {}
+        // Регистрация
+        if (req.method === 'POST' && route === '/api/register') {
+            const data = await readJson(req);
+            const login = normLogin(data.login);
+            const password = String(data.password || '');
+            if (!isValidLogin(login)) return sendJson(res, 400, { error: 'invalid_login' });
+            if (password.length < 6) return sendJson(res, 400, { error: 'weak_password' });
+            const key = loginKey(login);
+            if (accounts[key]) return sendJson(res, 409, { error: 'login_taken' });
+            const salt = crypto.randomBytes(16).toString('hex');
+            const token = newToken();
+            const acct = {
+                login,
+                userId: newUserId(),
+                salt,
+                hash: hashPassword(password, salt),
+                subUntil: 0,
+                balance: 0,
+                tokens: [token],
+                hwids: [],
+                createdAt: Date.now(),
+            };
+            rememberHwid(acct, data.hwid);
+            accounts[key] = acct;
+            persistAccounts();
+            console.log(`[apex] REGISTER login=${login} user=${acct.userId}`);
+            return sendJson(res, 200, { token, ...publicProfile(acct) });
+        }
+
+        // Вход
+        if (req.method === 'POST' && route === '/api/login') {
+            const data = await readJson(req);
+            const key = loginKey(data.login);
+            const acct = accounts[key];
+            if (!acct || !verifyPassword(acct, String(data.password || ''))) {
+                return sendJson(res, 401, { error: 'bad_credentials' });
             }
-            const u = getOrCreateUser(hwid);
-            if (!u) return sendJson(res, 400, { error: 'invalid hwid' });
-            return sendJson(res, 200, publicProfile(u));
+            const token = newToken();
+            if (!Array.isArray(acct.tokens)) acct.tokens = [];
+            acct.tokens.push(token);
+            if (acct.tokens.length > 10) acct.tokens = acct.tokens.slice(-10); // не более 10 устройств
+            rememberHwid(acct, data.hwid);
+            persistAccounts();
+            console.log(`[apex] LOGIN login=${acct.login} user=${acct.userId}`);
+            return sendJson(res, 200, { token, ...publicProfile(acct) });
+        }
+
+        // Выход (удаляем токен текущего устройства)
+        if (req.method === 'POST' && route === '/api/logout') {
+            const data = await readJson(req);
+            const token = tokenFromReq(data, req);
+            const acct = accountByToken(token);
+            if (acct) {
+                acct.tokens = (acct.tokens || []).filter((t) => t !== token);
+                persistAccounts();
+            }
+            return sendJson(res, 200, { ok: true });
+        }
+
+        // Профиль (по токену)
+        if (req.method === 'POST' && route === '/api/profile') {
+            const data = await readJson(req);
+            const acct = accountByToken(tokenFromReq(data, req));
+            if (!acct) return sendJson(res, 401, { error: 'unauthorized' });
+            rememberHwid(acct, data.hwid);
+            return sendJson(res, 200, publicProfile(acct));
         }
 
         // Пополнение баланса на любую сумму через AyfoPay
         if (req.method === 'POST' && route === '/api/topup') {
-            const body = await readBody(req);
-            let data = {};
-            try { data = JSON.parse(body || '{}'); } catch (_) {}
-            const u = getOrCreateUser(data.hwid);
-            if (!u) return sendJson(res, 400, { error: 'invalid hwid' });
+            const data = await readJson(req);
+            const acct = accountByToken(tokenFromReq(data, req));
+            if (!acct) return sendJson(res, 401, { error: 'unauthorized' });
             const amount = Math.round(Number(data.amount));
             if (!Number.isFinite(amount) || amount < MIN_TOPUP || amount > MAX_TOPUP) {
                 return sendJson(res, 400, { error: 'invalid amount', min: MIN_TOPUP, max: MAX_TOPUP });
             }
             const method = data.method === 'card' ? 'card' : 'sbp';
             const orderId = 'top_' + crypto.randomBytes(8).toString('hex');
-
             try {
                 const pay = await createAyfoPayment({
                     amount,
                     method,
                     customerReference: orderId,
-                    description: `Apex VPN пополнение баланса (${u.userId})`,
+                    description: `Apex VPN пополнение баланса (${acct.login})`,
                 });
                 if (!pay || !pay.id || !pay.url) {
                     return sendJson(res, 502, { error: 'bad AyfoPay response' });
@@ -273,8 +345,9 @@ const server = http.createServer(async (req, res) => {
                 orders[pay.id] = {
                     type: 'topup',
                     orderId,
-                    userId: u.userId,
-                    hwid: u.hwid,
+                    loginKey: loginKey(acct.login),
+                    login: acct.login,
+                    userId: acct.userId,
                     amount,
                     method,
                     status: 'pending',
@@ -282,7 +355,7 @@ const server = http.createServer(async (req, res) => {
                     paidAt: 0,
                 };
                 persistOrders();
-                console.log(`[apex] topup created ayfoId=${pay.id} user=${u.userId} ${amount}r ${method}`);
+                console.log(`[apex] topup created ayfoId=${pay.id} login=${acct.login} ${amount}r ${method}`);
                 return sendJson(res, 200, { id: pay.id, url: pay.url, amount: pay.amount, method });
             } catch (e) {
                 console.error('[apex] topup error:', e.message);
@@ -292,28 +365,23 @@ const server = http.createServer(async (req, res) => {
 
         // Покупка тарифа списанием с баланса (без AyfoPay)
         if (req.method === 'POST' && route === '/api/buy') {
-            const body = await readBody(req);
-            let data = {};
-            try { data = JSON.parse(body || '{}'); } catch (_) {}
-            const u = getOrCreateUser(data.hwid);
-            if (!u) return sendJson(res, 400, { error: 'invalid hwid' });
+            const data = await readJson(req);
+            const acct = accountByToken(tokenFromReq(data, req));
+            if (!acct) return sendJson(res, 401, { error: 'unauthorized' });
             const plan = planById(data.planId);
             if (!plan) return sendJson(res, 400, { error: 'invalid plan' });
-            if ((u.balance || 0) < plan.price) {
-                return sendJson(res, 402, { error: 'insufficient_funds', balance: u.balance || 0, price: plan.price });
+            if ((acct.balance || 0) < plan.price) {
+                return sendJson(res, 402, { error: 'insufficient_funds', balance: acct.balance || 0, price: plan.price });
             }
-            // Списываем и продлеваем атомарно (в одном процессе — гонок нет)
-            u.balance = (u.balance || 0) - plan.price;
-            extendSubscription(u, plan.days); // вызывает persistUsers()
-            console.log(`[apex] BUY user=${u.userId} plan=${plan.id} -${plan.price}r balance=${u.balance} -> subUntil=${new Date(u.subUntil).toISOString()}`);
-            return sendJson(res, 200, { ok: true, ...publicProfile(u) });
+            acct.balance = (acct.balance || 0) - plan.price;
+            extendSubscription(acct, plan.days); // вызывает persistAccounts()
+            console.log(`[apex] BUY login=${acct.login} plan=${plan.id} -${plan.price}r balance=${acct.balance} -> subUntil=${new Date(acct.subUntil).toISOString()}`);
+            return sendJson(res, 200, { ok: true, ...publicProfile(acct) });
         }
 
-        // Webhook от AyfoPay (только с их IP — ограничить на уровне firewall/nginx: 109.120.177.0)
+        // Webhook от AyfoPay (ограничить по IP на уровне firewall/nginx)
         if (req.method === 'POST' && route === '/api/ayfopay/webhook') {
-            const body = await readBody(req);
-            let data = {};
-            try { data = JSON.parse(body || '{}'); } catch (_) {}
+            const data = await readJson(req);
             const id = data.id;
             const signature = data.signature;
             if (!verifyWebhookSignature(id, signature)) {
@@ -322,7 +390,6 @@ const server = http.createServer(async (req, res) => {
             }
             const order = orders[id];
             if (!order) {
-                // подпись верна, но заказ не найден — отвечаем 200, чтобы не ретраили вечно
                 console.warn('[apex] webhook unknown order id=' + id);
                 return sendJson(res, 200, { ok: true, note: 'unknown order' });
             }
@@ -330,18 +397,13 @@ const server = http.createServer(async (req, res) => {
                 order.status = 'paid';
                 order.paidAt = Date.now();
                 persistOrders();
-                const hwidUser = users[order.hwid];
-                if (hwidUser) {
-                    if (order.type === 'topup') {
-                        // Пополнение баланса
-                        hwidUser.balance = (hwidUser.balance || 0) + order.amount;
-                        persistUsers();
-                        console.log(`[apex] PAID topup id=${id} user=${order.userId} +${order.amount}r -> balance=${hwidUser.balance}`);
-                    } else {
-                        // Историческая прямая покупка тарифа (старые pending-заказы)
-                        extendSubscription(hwidUser, order.days);
-                        console.log(`[apex] PAID plan id=${id} user=${order.userId} +${order.days}d -> subUntil=${new Date(hwidUser.subUntil).toISOString()}`);
-                    }
+                const acct = accounts[order.loginKey];
+                if (acct && order.type === 'topup') {
+                    acct.balance = (acct.balance || 0) + order.amount;
+                    persistAccounts();
+                    console.log(`[apex] PAID topup id=${id} login=${order.login} +${order.amount}r -> balance=${acct.balance}`);
+                } else {
+                    console.warn(`[apex] webhook paid but account/type mismatch id=${id} login=${order.login}`);
                 }
             }
             return sendJson(res, 200, { ok: true });
@@ -349,7 +411,7 @@ const server = http.createServer(async (req, res) => {
 
         // health
         if (req.method === 'GET' && route === '/api/health') {
-            return sendJson(res, 200, { ok: true, ayfopay: !!API_KEY, users: Object.keys(users).length, balance: true });
+            return sendJson(res, 200, { ok: true, ayfopay: !!API_KEY, accounts: Object.keys(accounts).length, auth: true });
         }
 
         sendJson(res, 404, { error: 'not found' });
@@ -364,6 +426,7 @@ server.listen(PORT, HOST, () => {
     console.log(' Слушает:        ' + HOST + ':' + PORT);
     console.log(' AyfoPay ключ:   ' + (API_KEY ? 'задан ✓' : 'НЕ ЗАДАН — оплата выключена'));
     console.log(' Данные:         ' + DATA_DIR);
+    console.log(' Аккаунтов:      ' + Object.keys(accounts).length);
     if (process.env.PUBLIC_BASE) {
         console.log(' Webhook URL:    ' + process.env.PUBLIC_BASE.replace(/\/$/, '') + '/api/ayfopay/webhook');
     }

@@ -149,17 +149,17 @@
         .connection-timer { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -1px; font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', monospace; opacity: 0; transform: translateY(6px); transition: all var(--transition), color var(--transition); }
         .connection-timer.visible { opacity: 1; transform: translateY(0); }
         .data-usage { font-size: 12px; color: var(--text-tertiary); transition: color var(--transition); }
-        .country-dropdown-container { width: 100%; margin-top: auto; position: relative; }
-        .dropdown-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-tertiary); margin-bottom: 6px; padding-left: 4px; transition: color var(--transition); }
-        .dropdown-trigger { display: flex; align-items: center; justify-content: space-between; background: var(--modal-bg); border: 1.5px solid var(--border); border-radius: 16px; padding: 12px 16px; cursor: pointer; transition: all var(--transition); font-size: 14px; font-weight: 600; color: var(--text); }
+        .country-dropdown-container { width: calc(100% + 32px); margin-left: -16px; margin-right: -16px; margin-top: auto; position: relative; }
+        .dropdown-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-tertiary); margin-bottom: 7px; padding-left: 6px; transition: color var(--transition); }
+        .dropdown-trigger { display: flex; align-items: center; justify-content: space-between; background: var(--modal-bg); border: 1.5px solid var(--border); border-radius: 18px; padding: 16px 20px; cursor: pointer; transition: all var(--transition); font-size: 15px; font-weight: 600; color: var(--text); }
         .dropdown-trigger:active { background: var(--card-bg); }
-        .trigger-left { display: flex; align-items: center; gap: 10px; }
-        .trigger-flag { font-size: 22px; }
+        .trigger-left { display: flex; align-items: center; gap: 12px; }
+        .trigger-flag { font-size: 24px; }
         .trigger-chevron { font-size: 14px; color: var(--text-tertiary); transition: transform 0.3s ease, color var(--transition); }
         .dropdown-open .trigger-chevron { transform: rotate(180deg); }
-        .dropdown-list { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--modal-bg); border-radius: 16px; margin-bottom: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; z-index: 15; max-height: 0; opacity: 0; pointer-events: none; transition: max-height 0.35s ease, opacity 0.25s ease, background var(--transition), border var(--transition); }
-        .dropdown-open .dropdown-list { max-height: 240px; opacity: 1; pointer-events: auto; }
-        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s, color var(--transition); font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+        .dropdown-list { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--modal-bg); border-radius: 18px; margin-bottom: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; z-index: 15; max-height: 0; opacity: 0; pointer-events: none; transition: max-height 0.35s ease, opacity 0.25s ease, background var(--transition), border var(--transition); }
+        .dropdown-open .dropdown-list { max-height: 320px; opacity: 1; pointer-events: auto; }
+        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 15px 20px; cursor: pointer; transition: background 0.2s, color var(--transition); font-size: 14px; font-weight: 500; color: var(--text-secondary); }
         .dropdown-item:hover { background: var(--card-bg); }
         .dropdown-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); font-weight: 600; }
         .item-flag { font-size: 20px; }
@@ -312,6 +312,31 @@
         .pay-method-btn:active { border-color: var(--accent); }
         .pm-sub { font-size: 11px; font-weight: 500; color: var(--text-tertiary); }
         .pay-status { font-size: 12px; text-align: center; color: var(--text-secondary); min-height: 16px; }
+
+        /* ===== Экран входа / регистрации (обязательный) ===== */
+        .auth-screen { position: absolute; inset: 0; z-index: 95; background: var(--phone-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 26px calc(32px + env(safe-area-inset-bottom,0px)); gap: 18px; opacity: 1; transition: opacity 0.35s ease, visibility 0.35s ease; overflow-y: auto; }
+        .auth-screen.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+        .auth-logo { width: 80px; height: 80px; background: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; }
+        .auth-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+        .auth-sub { font-size: 13px; color: var(--text-tertiary); text-align: center; margin-top: -10px; }
+        .auth-tabs { display: flex; width: 100%; max-width: 340px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 4px; gap: 4px; }
+        .auth-tab { flex: 1; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--text-tertiary); padding: 10px 0; border-radius: 11px; cursor: pointer; transition: background var(--transition), color var(--transition); }
+        .auth-tab.active { background: var(--modal-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .auth-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 340px; }
+        .auth-field { display: flex; flex-direction: column; gap: 6px; }
+        .auth-field label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.4px; padding-left: 4px; }
+        .auth-input { width: 100%; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text); outline: none; transition: border-color var(--transition); }
+        .auth-input:focus { border-color: var(--accent); }
+        .auth-input::placeholder { color: var(--text-tertiary); font-weight: 500; }
+        .auth-submit { margin-top: 4px; background: linear-gradient(105deg, var(--accent), #2a5298); color: #fff; border: none; border-radius: 14px; padding: 15px 0; font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer; transition: transform var(--transition), opacity var(--transition); }
+        .auth-submit:active { transform: scale(0.98); }
+        .auth-submit:disabled { opacity: 0.6; cursor: default; }
+        .auth-error { font-size: 12.5px; text-align: center; color: #ef4444; min-height: 16px; font-weight: 500; }
+        .auth-hint { font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.5; }
+
+        /* Кнопка выхода в профиле */
+        .logout-btn { background: var(--card-bg); border: 1.5px solid var(--border); color: #ef4444; border-radius: 14px; padding: 13px 0; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: border-color var(--transition); width: 100%; }
+        .logout-btn:active { border-color: #ef4444; }
     </style>
 </head>
 <body>
@@ -326,6 +351,29 @@
                 </div>
                 <div class="splash-title">Apex VPN</div>
                 <div class="splash-dots"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+
+        <div class="auth-screen hidden" id="authScreen">
+            <div class="auth-logo"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
+            <div class="auth-title">Apex VPN</div>
+            <div class="auth-sub">Войдите или создайте аккаунт</div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="authTabLogin">Вход</button>
+                <button class="auth-tab" id="authTabRegister">Регистрация</button>
+            </div>
+            <div class="auth-form">
+                <div class="auth-field">
+                    <label>Логин</label>
+                    <input class="auth-input" id="authLogin" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="3–32 символа (a–z, 0–9, _)">
+                </div>
+                <div class="auth-field">
+                    <label>Пароль</label>
+                    <input class="auth-input" id="authPassword" type="password" autocomplete="current-password" placeholder="минимум 6 символов">
+                </div>
+                <div class="auth-error" id="authError"></div>
+                <button class="auth-submit" id="authSubmit">Войти</button>
+                <div class="auth-hint">Один аккаунт можно использовать на нескольких устройствах.</div>
             </div>
         </div>
 
@@ -381,6 +429,7 @@
                     <div class="profile-avatar"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
                     <div class="profile-badge" id="subBadge">Проверка…</div>
                     <div class="profile-rows">
+                        <div class="profile-row"><span class="pr-label">Логин</span><span class="pr-value" id="profLogin">—</span></div>
                         <div class="profile-row"><span class="pr-label">ID пользователя</span><span class="pr-value" id="profUserId">—</span></div>
                         <div class="profile-row"><span class="pr-label">HWID устройства</span><span class="pr-value pr-mono" id="profHwid">—</span></div>
                         <div class="profile-row"><span class="pr-label">Подписка</span><span class="pr-value" id="profSub">—</span></div>
@@ -392,17 +441,13 @@
                     <button class="balance-topup" id="btnTopup">Пополнить баланс</button>
                 </div>
                 <div class="pay-hint">Пополняйте баланс на любую сумму через СБП или картой, затем оплачивайте тарифы с баланса на вкладке «Тарифы».</div>
+                <button class="logout-btn" id="btnLogout">Выйти из аккаунта</button>
             </div>
 
             <div id="viewTariffs" style="display:none;">
-                <div class="balance-card">
-                    <div class="balance-label">Ваш баланс</div>
-                    <div class="balance-value" id="balanceValueT">— <span>₽</span></div>
-                    <button class="balance-topup" id="btnTopupT">Пополнить баланс</button>
-                </div>
                 <div class="tariffs-title">Выбор тарифа</div>
                 <div class="tariffs-grid" id="tariffsGrid"></div>
-                <div class="pay-hint">Тарифы оплачиваются с баланса. Если средств не хватает — сначала пополните баланс.</div>
+                <div class="pay-hint">Тарифы оплачиваются с баланса. Пополнить баланс можно на вкладке «Профиль».</div>
             </div>
         </div>
 
@@ -619,6 +664,7 @@
         }
 
         function doConnect() {
+            if (!authToken) { switchTab('home'); showAuth(); return; }
             uiConnecting();
             if (Bridge && Bridge.connect) {
                 // Сначала даём кадру с анимацией нажатия/спиннера/свечения отрисоваться,
@@ -755,13 +801,40 @@
             }
         });
 
-        // ===== Старт: скрыть splash, отразить состояние, автоподключение =====
+        // ===== Старт: скрыть splash, проверить авторизацию, автоподключение =====
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
+            setTimeout(async () => {
                 hideSplash();
-                if (Bridge && Bridge.isRunning && Bridge.isRunning()) { uiConnected(); return; }
-                if (autoConnect && !isConnected && !isConnecting) doConnect();
-            }, 5000);
+                // Проверяем сохранённый токен
+                if (authToken) {
+                    // Пробуем загрузить профиль — если токен валиден, покажем приложение
+                    try {
+                        if (!myHwid) { try { myHwid = (Bridge && Bridge.getHwid) ? (Bridge.getHwid() || '') : ''; } catch (_) {} }
+                        const r = await fetch(`${API_BASE}/api/profile`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: authToken, hwid: myHwid })
+                        });
+                        if (r.status === 401) { handleUnauthorized(); return; }
+                        const p = await r.json();
+                        if (p && p.userId) {
+                            renderProfile(p);
+                            profileLoaded = true;
+                            hideAuth();
+                            if (autoConnect && !isConnected && !isConnecting && Bridge && Bridge.isRunning && Bridge.isRunning()) {
+                                uiConnected();
+                                return;
+                            }
+                            if (autoConnect && !isConnected && !isConnecting) doConnect();
+                            return;
+                        }
+                    } catch (_) {}
+                    // Токен был, но сервер недоступен — показываем приложение офлайн
+                    hideAuth();
+                    return;
+                }
+                // Нет токена — требуем вход
+                showAuth();
+            }, 1500);
         });
 
         // ===== Автоматический пинг =====
@@ -824,8 +897,105 @@
         let myHwid = '';
         try { myHwid = (Bridge && Bridge.getHwid) ? (Bridge.getHwid() || '') : ''; } catch (_) {}
 
+        // ===== Авторизация (обязательный вход) =====
+        let authToken = '';
+        try { authToken = localStorage.getItem('apex_token') || ''; } catch (_) {}
+
+        const authScreen = document.getElementById('authScreen');
+        const authTabLogin = document.getElementById('authTabLogin');
+        const authTabRegister = document.getElementById('authTabRegister');
+        const authLoginInput = document.getElementById('authLogin');
+        const authPassInput = document.getElementById('authPassword');
+        const authError = document.getElementById('authError');
+        const authSubmit = document.getElementById('authSubmit');
+        let authMode = 'login'; // 'login' | 'register'
+
+        function setAuthMode(mode) {
+            authMode = mode;
+            authTabLogin.classList.toggle('active', mode === 'login');
+            authTabRegister.classList.toggle('active', mode === 'register');
+            authSubmit.textContent = mode === 'login' ? 'Войти' : 'Создать аккаунт';
+            authPassInput.setAttribute('autocomplete', mode === 'login' ? 'current-password' : 'new-password');
+            authError.textContent = '';
+        }
+        authTabLogin.addEventListener('click', () => setAuthMode('login'));
+        authTabRegister.addEventListener('click', () => setAuthMode('register'));
+
+        function showAuth() {
+            authScreen.classList.remove('hidden');
+            authError.textContent = '';
+        }
+        function hideAuth() { authScreen.classList.add('hidden'); }
+
+        const AUTH_ERRORS = {
+            invalid_login: 'Логин: 3–32 символа, латиница, цифры или _',
+            weak_password: 'Пароль должен быть не короче 6 символов',
+            login_taken: 'Такой логин уже занят',
+            bad_credentials: 'Неверный логин или пароль',
+            unauthorized: 'Сессия истекла — войдите снова',
+        };
+
+        async function doAuth() {
+            const login = authLoginInput.value.trim();
+            const password = authPassInput.value;
+            if (login.length < 3) { authError.textContent = 'Введите логин (от 3 символов)'; return; }
+            if (password.length < 6) { authError.textContent = 'Пароль не короче 6 символов'; return; }
+            authSubmit.disabled = true;
+            authError.textContent = authMode === 'login' ? 'Вход…' : 'Создаём аккаунт…';
+            authError.style.color = 'var(--text-tertiary)';
+            try {
+                const r = await fetch(`${API_BASE}/api/${authMode === 'login' ? 'login' : 'register'}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password, hwid: myHwid })
+                });
+                const d = await r.json();
+                if (r.ok && d && d.token) {
+                    authToken = d.token;
+                    try { localStorage.setItem('apex_token', authToken); } catch (_) {}
+                    authPassInput.value = '';
+                    authError.textContent = '';
+                    authError.style.color = '#ef4444';
+                    renderProfile(d);
+                    profileLoaded = true;
+                    hideAuth();
+                } else {
+                    authError.style.color = '#ef4444';
+                    authError.textContent = AUTH_ERRORS[d && d.error] || 'Ошибка. Попробуйте ещё раз';
+                }
+            } catch (e) {
+                authError.style.color = '#ef4444';
+                authError.textContent = 'Сервер недоступен — проверьте интернет';
+            } finally {
+                authSubmit.disabled = false;
+            }
+        }
+        authSubmit.addEventListener('click', doAuth);
+        authPassInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doAuth(); });
+
+        async function logout() {
+            const t = authToken;
+            authToken = '';
+            try { localStorage.removeItem('apex_token'); } catch (_) {}
+            profileLoaded = false; lastProfile = null;
+            switchTab('home');
+            showAuth();
+            setAuthMode('login');
+            if (t) {
+                try { await fetch(`${API_BASE}/api/logout`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: t })
+                }); } catch (_) {}
+            }
+        }
+        document.getElementById('btnLogout').addEventListener('click', logout);
+
         // tab: 'home' | 'tariffs' | 'profile'
         function switchTab(tab) {
+            // Вкладки Профиль и Тарифы требуют входа
+            if ((tab === 'profile' || tab === 'tariffs') && !authToken) {
+                showAuth();
+                return;
+            }
             viewHome.style.display = tab === 'home' ? '' : 'none';
             viewTariffs.style.display = tab === 'tariffs' ? '' : 'none';
             viewProfile.style.display = tab === 'profile' ? '' : 'none';
@@ -847,17 +1017,15 @@
         }
 
         function renderBalance(p) {
-            const html = `${fmtMoney(p.balance)} <span>₽</span>`;
             const a = document.getElementById('balanceValue');
-            const b = document.getElementById('balanceValueT');
-            if (a) a.innerHTML = html;
-            if (b) b.innerHTML = html;
+            if (a) a.innerHTML = `${fmtMoney(p.balance)} <span>₽</span>`;
         }
 
         function renderProfile(p) {
             lastProfile = p;
+            document.getElementById('profLogin').textContent = p.login || '—';
             document.getElementById('profUserId').textContent = p.userId || '—';
-            document.getElementById('profHwid').textContent = p.hwid || myHwid || '—';
+            document.getElementById('profHwid').textContent = myHwid || '—';
             const badge = document.getElementById('subBadge');
             const sub = document.getElementById('profSub');
             if (p.active) {
@@ -895,22 +1063,33 @@
         }
 
         async function loadProfile() {
+            if (!authToken) { showAuth(); return; }
             try {
                 if (!myHwid) { try { myHwid = (Bridge && Bridge.getHwid) ? (Bridge.getHwid() || '') : ''; } catch (_) {} }
                 const r = await fetch(`${API_BASE}/api/profile`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hwid: myHwid })
+                    body: JSON.stringify({ token: authToken, hwid: myHwid })
                 });
+                if (r.status === 401) { handleUnauthorized(); return; }
                 const p = await r.json();
                 if (p && p.userId) { renderProfile(p); profileLoaded = true; }
                 else throw new Error('bad profile');
             } catch (e) {
                 document.getElementById('subBadge').textContent = 'Сервер недоступен';
                 document.getElementById('subBadge').className = 'profile-badge expired';
-                document.getElementById('profHwid').textContent = myHwid || '—';
                 document.getElementById('profUserId').textContent = '—';
                 document.getElementById('profSub').textContent = 'проверьте подключение к интернету';
             }
+        }
+
+        // Токен невалиден/истёк — сбрасываем и показываем экран входа
+        function handleUnauthorized() {
+            authToken = '';
+            try { localStorage.removeItem('apex_token'); } catch (_) {}
+            profileLoaded = false; lastProfile = null;
+            switchTab('home');
+            setAuthMode('login');
+            showAuth();
         }
 
         // ----- Покупка тарифа с баланса -----
@@ -944,17 +1123,18 @@
         buyGotoTopupBtn.addEventListener('click', () => { closeBuy(); openTopup(); });
 
         buyConfirmBtn.addEventListener('click', async () => {
-            if (!buyPlanId) return;
+            if (!buyPlanId || !authToken) return;
             buyConfirmBtn.disabled = true;
             buyStatusEl.textContent = 'Оплата…';
             try {
                 const r = await fetch(`${API_BASE}/api/buy`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hwid: myHwid, planId: buyPlanId })
+                    body: JSON.stringify({ token: authToken, planId: buyPlanId })
                 });
+                if (r.status === 401) { handleUnauthorized(); closeBuy(); return; }
                 const d = await r.json();
                 if (d && d.ok) {
-                    renderProfile(d);                 // обновляем баланс/подписку из ответа
+                    renderProfile(d);
                     buyStatusEl.textContent = '✓ Подписка активирована';
                     setTimeout(() => { closeBuy(); switchTab('profile'); }, 900);
                 } else if (d && d.error === 'insufficient_funds') {
@@ -981,7 +1161,6 @@
         }
         function closeTopup() { topupModal.classList.remove('open'); }
         document.getElementById('btnTopup').addEventListener('click', openTopup);
-        document.getElementById('btnTopupT').addEventListener('click', openTopup);
         document.getElementById('topupClose').addEventListener('click', closeTopup);
         topupModal.addEventListener('click', (e) => { if (e.target === topupModal) closeTopup(); });
 
@@ -997,6 +1176,7 @@
         });
 
         async function startTopup(method) {
+            if (!authToken) { handleUnauthorized(); return; }
             const amount = Math.round(Number(topupInput.value));
             if (!Number.isFinite(amount) || amount < 50) {
                 topupStatusEl.textContent = 'Минимальная сумма — 50 ₽';
@@ -1010,8 +1190,9 @@
             try {
                 const r = await fetch(`${API_BASE}/api/topup`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hwid: myHwid, amount, method })
+                    body: JSON.stringify({ token: authToken, amount, method })
                 });
+                if (r.status === 401) { handleUnauthorized(); closeTopup(); return; }
                 const d = await r.json();
                 if (d && d.url) {
                     topupStatusEl.textContent = 'Открываем оплату…';
