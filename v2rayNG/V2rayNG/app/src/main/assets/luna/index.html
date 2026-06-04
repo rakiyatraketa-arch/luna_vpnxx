@@ -245,6 +245,52 @@
         .app-paused *::after {
             animation-play-state: paused !important;
         }
+
+        /* ===== Нижняя навигация (вкладки Главная/Профиль) ===== */
+        .bottom-nav { display: flex; border-top: 1px solid var(--border); background: var(--phone-bg); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); z-index: 6; transition: background var(--transition), border var(--transition); }
+        .nav-tab { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; border-radius: 14px; color: var(--text-tertiary); font-family: inherit; font-size: 11px; font-weight: 600; transition: color var(--transition), background var(--transition); }
+        .nav-tab .nav-ic { font-size: 20px; filter: grayscale(1) opacity(0.55); transition: filter var(--transition); }
+        .nav-tab.active { color: var(--accent); }
+        .nav-tab.active .nav-ic { filter: none; }
+        .nav-tab:active { background: var(--card-bg); }
+
+        /* ===== Профиль ===== */
+        #viewProfile { width: 100%; display: flex; flex-direction: column; gap: 16px; animation: splashIn 0.35s ease both; }
+        .profile-card { background: var(--modal-bg); border: 1px solid var(--border); border-radius: 24px; padding: 22px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: var(--shadow-lg); }
+        .profile-avatar { width: 72px; height: 72px; border-radius: 22px; background: #fff; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 8px 20px rgba(43,95,158,0.12); }
+        .profile-badge { font-size: 13px; font-weight: 700; padding: 6px 16px; border-radius: 30px; background: rgba(43,95,158,0.12); color: var(--accent); }
+        .profile-badge.active { background: rgba(16,185,129,0.14); color: #10b981; }
+        .profile-badge.expired { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .profile-rows { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+        .profile-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+        .profile-row:last-child { border-bottom: none; }
+        .pr-label { font-size: 13px; color: var(--text-secondary); flex: none; }
+        .pr-value { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; word-break: break-all; }
+        .pr-mono { font-family: 'SF Mono','JetBrains Mono','Consolas',monospace; font-weight: 600; font-size: 11px; letter-spacing: 0.3px; }
+
+        .tariffs-title { font-size: 15px; font-weight: 700; color: var(--text); padding-left: 4px; }
+        .tariffs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .tariff-card { background: var(--modal-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 16px 14px; display: flex; flex-direction: column; gap: 5px; position: relative; overflow: hidden; transition: transform var(--transition), border-color var(--transition); }
+        .tariff-card.best { border-color: var(--accent); }
+        .tariff-best-tag { position: absolute; top: 11px; right: -30px; transform: rotate(45deg); background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; padding: 2px 34px; letter-spacing: 0.5px; }
+        .tariff-name { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+        .tariff-price { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
+        .tariff-price span { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+        .tariff-perm { font-size: 11px; color: var(--text-tertiary); }
+        .tariff-buy { margin-top: 6px; background: linear-gradient(105deg, var(--accent), #2a5298); color: #fff; border: none; border-radius: 12px; padding: 9px 0; font-weight: 700; font-size: 13px; font-family: inherit; cursor: pointer; transition: transform var(--transition); }
+        .tariff-buy:active { transform: scale(0.96); }
+        .pay-hint { font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.5; padding: 0 8px 8px; }
+
+        /* ===== Модалка оплаты ===== */
+        .pay-modal { position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .pay-modal.open { opacity: 1; pointer-events: auto; }
+        .pay-sheet { width: 100%; max-width: 440px; background: var(--modal-bg); border-radius: 28px 28px 0 0; padding: 22px 20px calc(28px + env(safe-area-inset-bottom,0px)); display: flex; flex-direction: column; gap: 12px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 -10px 40px rgba(0,0,0,0.2); }
+        .pay-modal.open .pay-sheet { transform: translateY(0); }
+        .pay-amount { font-size: 28px; font-weight: 800; color: var(--text); text-align: center; }
+        .pay-method-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 16px; padding: 14px 16px; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--text); transition: border-color var(--transition); }
+        .pay-method-btn:active { border-color: var(--accent); }
+        .pm-sub { font-size: 11px; font-weight: 500; color: var(--text-tertiary); }
+        .pay-status { font-size: 12px; text-align: center; color: var(--text-secondary); min-height: 16px; }
     </style>
 </head>
 <body>
@@ -271,6 +317,7 @@
                 <div class="header-actions"><button class="icon-btn" id="settingsBtn">⚙️</button></div>
             </div>
 
+            <div id="viewHome">
             <div class="orb-container">
                 <div class="particle"></div><div class="particle"></div><div class="particle"></div>
                 <div class="particle"></div><div class="particle"></div><div class="particle"></div>
@@ -305,6 +352,37 @@
                     <div class="dropdown-item" data-country="Россия" data-flag="🇷🇺" data-ping="..."><span class="item-flag">🇷🇺</span> Россия <span class="signal-dot" data-country="Россия"></span> <span class="item-ping">...</span></div>
                 </div>
                 <div class="server-loader" id="serverLoader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div>
+            </div>
+            </div><!-- /viewHome -->
+
+            <div id="viewProfile" style="display:none;">
+                <div class="profile-card">
+                    <div class="profile-avatar"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
+                    <div class="profile-badge" id="subBadge">Проверка…</div>
+                    <div class="profile-rows">
+                        <div class="profile-row"><span class="pr-label">ID пользователя</span><span class="pr-value" id="profUserId">—</span></div>
+                        <div class="profile-row"><span class="pr-label">HWID устройства</span><span class="pr-value pr-mono" id="profHwid">—</span></div>
+                        <div class="profile-row"><span class="pr-label">Подписка</span><span class="pr-value" id="profSub">—</span></div>
+                    </div>
+                </div>
+                <div class="tariffs-title">Выбор тарифа</div>
+                <div class="tariffs-grid" id="tariffsGrid"></div>
+                <div class="pay-hint">Оплата через AyfoPay — СБП или банковской картой. Подписка активируется автоматически после оплаты.</div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-tab active" id="tabHome"><span class="nav-ic">🛡️</span><span class="nav-lbl">Главная</span></button>
+            <button class="nav-tab" id="tabProfile"><span class="nav-ic">👤</span><span class="nav-lbl">Профиль</span></button>
+        </div>
+
+        <div class="pay-modal" id="payModal">
+            <div class="pay-sheet">
+                <div class="panel-header"><div class="panel-title" id="payTitle">Оплата</div><button class="close-btn" id="payClose">✕</button></div>
+                <div class="pay-amount" id="payAmount">—</div>
+                <button class="pay-method-btn" id="paySbp"><span>СБП</span><span class="pm-sub">Система быстрых платежей</span></button>
+                <button class="pay-method-btn" id="payCard"><span>Банковская карта</span><span class="pm-sub">Visa · MasterCard · МИР</span></button>
+                <div class="pay-status" id="payStatus"></div>
             </div>
         </div>
 
@@ -666,6 +744,137 @@
             // Повторяем каждые 5 секунд
             setInterval(measureAllPings, 5000);
         }, 1500);
+
+        // ===================== ПРОФИЛЬ + ТАРИФЫ (AyfoPay) =====================
+        /* ВАЖНО: укажи здесь публичный URL своего бэкенда (apex-backend.js за HTTPS).
+           Это НЕ секрет — просто адрес API. Платёжный ключ живёт только на сервере. */
+        const API_BASE = 'https://api.apexvpn.example';
+
+        const tabHome = document.getElementById('tabHome');
+        const tabProfile = document.getElementById('tabProfile');
+        const viewHome = document.getElementById('viewHome');
+        const viewProfile = document.getElementById('viewProfile');
+        let profileLoaded = false;
+        let myHwid = '';
+        try { myHwid = (Bridge && Bridge.getHwid) ? (Bridge.getHwid() || '') : ''; } catch (_) {}
+
+        function switchTab(profile) {
+            viewHome.style.display = profile ? 'none' : '';
+            viewProfile.style.display = profile ? '' : 'none';
+            tabHome.classList.toggle('active', !profile);
+            tabProfile.classList.toggle('active', profile);
+            if (profile && !profileLoaded) loadProfile();
+        }
+        tabHome.addEventListener('click', () => switchTab(false));
+        tabProfile.addEventListener('click', () => switchTab(true));
+
+        function fmtDate(ms) {
+            try { const d = new Date(ms); return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }); }
+            catch (_) { return '—'; }
+        }
+
+        function renderProfile(p) {
+            document.getElementById('profUserId').textContent = p.userId || '—';
+            document.getElementById('profHwid').textContent = p.hwid || myHwid || '—';
+            const badge = document.getElementById('subBadge');
+            const sub = document.getElementById('profSub');
+            if (p.active) {
+                badge.textContent = 'Подписка активна';
+                badge.className = 'profile-badge active';
+                sub.textContent = `до ${fmtDate(p.subUntil)} · осталось ${p.daysLeft} дн.`;
+            } else {
+                badge.textContent = 'Подписка не активна';
+                badge.className = 'profile-badge expired';
+                sub.textContent = 'нет активной подписки';
+            }
+            if (Array.isArray(p.plans)) renderTariffs(p.plans);
+        }
+
+        function renderTariffs(plans) {
+            const grid = document.getElementById('tariffsGrid');
+            grid.innerHTML = '';
+            const best = plans.reduce((a, b) => (b.months >= (a?.months || 0) ? b : a), null);
+            plans.forEach(plan => {
+                const card = document.createElement('div');
+                card.className = 'tariff-card' + (best && plan.id === best.id ? ' best' : '');
+                const perMonth = Math.round(plan.price / plan.months);
+                card.innerHTML =
+                    (best && plan.id === best.id ? '<div class="tariff-best-tag">ВЫГОДНО</div>' : '') +
+                    `<div class="tariff-name">${plan.title}</div>` +
+                    `<div class="tariff-price">${plan.price} <span>₽</span></div>` +
+                    `<div class="tariff-perm">≈ ${perMonth} ₽/мес</div>` +
+                    `<button class="tariff-buy" data-plan="${plan.id}" data-price="${plan.price}" data-title="${plan.title}">Купить</button>`;
+                grid.appendChild(card);
+            });
+            grid.querySelectorAll('.tariff-buy').forEach(btn => {
+                btn.addEventListener('click', () => openPay(btn.dataset.plan, btn.dataset.price, btn.dataset.title));
+            });
+        }
+
+        async function loadProfile() {
+            try {
+                if (!myHwid) { try { myHwid = (Bridge && Bridge.getHwid) ? (Bridge.getHwid() || '') : ''; } catch (_) {} }
+                const r = await fetch(`${API_BASE}/api/profile`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hwid: myHwid })
+                });
+                const p = await r.json();
+                if (p && p.userId) { renderProfile(p); profileLoaded = true; }
+                else throw new Error('bad profile');
+            } catch (e) {
+                document.getElementById('subBadge').textContent = 'Сервер недоступен';
+                document.getElementById('subBadge').className = 'profile-badge expired';
+                document.getElementById('profHwid').textContent = myHwid || '—';
+                document.getElementById('profUserId').textContent = '—';
+                document.getElementById('profSub').textContent = 'проверьте подключение к интернету';
+            }
+        }
+
+        // ----- Оплата -----
+        const payModal = document.getElementById('payModal');
+        const payAmountEl = document.getElementById('payAmount');
+        const payTitleEl = document.getElementById('payTitle');
+        const payStatusEl = document.getElementById('payStatus');
+        let payPlanId = null;
+
+        function openPay(planId, price, title) {
+            payPlanId = planId;
+            payTitleEl.textContent = title || 'Оплата';
+            payAmountEl.textContent = `${price} ₽`;
+            payStatusEl.textContent = '';
+            payModal.classList.add('open');
+        }
+        function closePay() { payModal.classList.remove('open'); }
+        document.getElementById('payClose').addEventListener('click', closePay);
+        payModal.addEventListener('click', (e) => { if (e.target === payModal) closePay(); });
+
+        async function startPayment(method) {
+            if (!payPlanId) return;
+            payStatusEl.textContent = 'Создаём счёт…';
+            try {
+                const r = await fetch(`${API_BASE}/api/pay`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hwid: myHwid, planId: payPlanId, method })
+                });
+                const d = await r.json();
+                if (d && d.url) {
+                    payStatusEl.textContent = 'Открываем оплату…';
+                    if (Bridge && Bridge.openUrl) Bridge.openUrl(d.url); else window.open(d.url, '_blank');
+                    setTimeout(() => { closePay(); profileLoaded = false; }, 800);
+                } else {
+                    payStatusEl.textContent = 'Ошибка: ' + (d && d.error ? d.error : 'не удалось создать платёж');
+                }
+            } catch (e) {
+                payStatusEl.textContent = 'Сервер оплаты недоступен';
+            }
+        }
+        document.getElementById('paySbp').addEventListener('click', () => startPayment('sbp'));
+        document.getElementById('payCard').addEventListener('click', () => startPayment('card'));
+
+        // Обновляем профиль при возврате в приложение (после оплаты в браузере)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && viewProfile.style.display !== 'none') { profileLoaded = false; loadProfile(); }
+        });
     </script>
 </body>
 </html>

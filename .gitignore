@@ -45,6 +45,9 @@ keystore.properties
 .env
 .env.local
 
+# Apex backend runtime data (profiles/orders)
+apex-data/
+
 # Temporary
 *.tmp
 *.temp

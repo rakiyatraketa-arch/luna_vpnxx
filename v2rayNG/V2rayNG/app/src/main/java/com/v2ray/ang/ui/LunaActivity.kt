@@ -1,9 +1,12 @@
 package com.v2ray.ang.ui
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.net.TrafficStats
+import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
@@ -14,6 +17,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.dto.UrlContentRequest
 import com.v2ray.ang.handler.AngConfigManager
@@ -26,6 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 
 /**
  * Luna VPN — экран на WebView поверх ядра v2rayNG.
@@ -118,6 +123,10 @@ class LunaActivity : AppCompatActivity() {
             builtInZoomControls = false
             displayZoomControls = false
             textZoom = 100                                    // игнорируем системное масштабирование шрифта
+            // Разрешаем локальной странице (file://) делать fetch к нашему HTTPS-бэкенду
+            // профиля/оплаты (CORS на сервере открыт). Без этого file:// не может в сеть.
+            @Suppress("DEPRECATION")
+            allowUniversalAccessFromFileURLs = true
         }
         webView.addJavascriptInterface(LunaBridge(), "LunaBridge")
 
@@ -472,6 +481,39 @@ class LunaActivity : AppCompatActivity() {
         @JavascriptInterface
         fun requestPing(country: String) {
             measurePing(country)
+        }
+
+        /**
+         * Стабильный HWID устройства = SHA-256(ANDROID_ID + packageName), hex (32 симв.).
+         * Привязка профиля к устройству делается на бэкенде по этому HWID.
+         * Вычисление мгновенное, без сети/диска.
+         */
+        @JavascriptInterface
+        fun getHwid(): String {
+            return try {
+                val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID).orEmpty()
+                val raw = androidId + "|" + BuildConfig.APPLICATION_ID
+                val digest = MessageDigest.getInstance("SHA-256").digest(raw.toByteArray(Charsets.UTF_8))
+                digest.joinToString("") { "%02X".format(it) }.take(32)
+            } catch (e: Exception) {
+                ""
+            }
+        }
+
+        /** Открывает ссылку оплаты во внешнем браузере (СБП/карта). */
+        @JavascriptInterface
+        fun openUrl(url: String?) {
+            val u = url?.trim().orEmpty()
+            if (u.isEmpty()) return
+            runOnUiThread {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(u))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(this@LunaActivity, "Не удалось открыть ссылку", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }
