@@ -7,8 +7,9 @@
  *
  * Хранит:
  *   - профиль пользователя, привязанный к HWID устройства (один HWID = один профиль);
- *   - срок подписки (subUntil, ms);
- *   - заказы (по id платежа AyfoPay) для надёжной обработки webhook.
+ *   - баланс пользователя (рубли) — пополняется через AyfoPay;
+ *   - срок подписки (subUntil, ms) — тарифы покупаются списанием с баланса;
+ *   - заказы пополнения (по id платежа AyfoPay) для надёжной обработки webhook.
  *
  * Зависимостей нет — только встроенные модули Node.js.
  *
@@ -54,6 +55,10 @@ const PLANS = [
 ];
 const planById = (id) => PLANS.find((p) => p.id === id) || null;
 
+// Лимиты пополнения баланса (рубли). Любая сумма в этом диапазоне.
+const MIN_TOPUP = 50;
+const MAX_TOPUP = 50000;
+
 // ===================== Хранилище (JSON-файлы) =====================
 
 function ensureDir(d) {
@@ -75,9 +80,10 @@ function saveJson(file, obj) {
     fs.renameSync(tmp, full); // атомарная замена
 }
 
-// users: { [hwid]: { userId, hwid, subUntil, createdAt } }
+// users: { [hwid]: { userId, hwid, subUntil, balance, createdAt } }
 let users = loadJson('users.json', {});
-// orders: { [ayfoPaymentId]: { userId, hwid, planId, days, amount, method, status, createdAt, paidAt } }
+// orders: { [ayfoPaymentId]: { type:'topup', userId, hwid, amount, method, status, createdAt, paidAt } }
+// (type 'plan' — историческая покупка тарифа напрямую; новые покупки тарифа идут с баланса без AyfoPay)
 let orders = loadJson('orders.json', {});
 
 function persistUsers() { saveJson('users.json', users); }
@@ -102,8 +108,14 @@ function getOrCreateUser(hwidRaw) {
             userId: newUserId(),
             hwid,
             subUntil: 0,
+            balance: 0,
             createdAt: Date.now(),
         };
+        persistUsers();
+    }
+    // Миграция старых профилей без поля balance
+    if (typeof users[hwid].balance !== 'number') {
+        users[hwid].balance = 0;
         persistUsers();
     }
     return users[hwid];
@@ -119,6 +131,7 @@ function publicProfile(u) {
         subUntil: u.subUntil,
         active,
         daysLeft,
+        balance: u.balance || 0,
         plans: PLANS,
     };
 }
@@ -233,8 +246,52 @@ const server = http.createServer(async (req, res) => {
             return sendJson(res, 200, publicProfile(u));
         }
 
-        // Создание платежа
-        if (req.method === 'POST' && route === '/api/pay') {
+        // Пополнение баланса на любую сумму через AyfoPay
+        if (req.method === 'POST' && route === '/api/topup') {
+            const body = await readBody(req);
+            let data = {};
+            try { data = JSON.parse(body || '{}'); } catch (_) {}
+            const u = getOrCreateUser(data.hwid);
+            if (!u) return sendJson(res, 400, { error: 'invalid hwid' });
+            const amount = Math.round(Number(data.amount));
+            if (!Number.isFinite(amount) || amount < MIN_TOPUP || amount > MAX_TOPUP) {
+                return sendJson(res, 400, { error: 'invalid amount', min: MIN_TOPUP, max: MAX_TOPUP });
+            }
+            const method = data.method === 'card' ? 'card' : 'sbp';
+            const orderId = 'top_' + crypto.randomBytes(8).toString('hex');
+
+            try {
+                const pay = await createAyfoPayment({
+                    amount,
+                    method,
+                    customerReference: orderId,
+                    description: `Apex VPN пополнение баланса (${u.userId})`,
+                });
+                if (!pay || !pay.id || !pay.url) {
+                    return sendJson(res, 502, { error: 'bad AyfoPay response' });
+                }
+                orders[pay.id] = {
+                    type: 'topup',
+                    orderId,
+                    userId: u.userId,
+                    hwid: u.hwid,
+                    amount,
+                    method,
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    paidAt: 0,
+                };
+                persistOrders();
+                console.log(`[apex] topup created ayfoId=${pay.id} user=${u.userId} ${amount}r ${method}`);
+                return sendJson(res, 200, { id: pay.id, url: pay.url, amount: pay.amount, method });
+            } catch (e) {
+                console.error('[apex] topup error:', e.message);
+                return sendJson(res, 502, { error: 'payment_failed', detail: e.message });
+            }
+        }
+
+        // Покупка тарифа списанием с баланса (без AyfoPay)
+        if (req.method === 'POST' && route === '/api/buy') {
             const body = await readBody(req);
             let data = {};
             try { data = JSON.parse(body || '{}'); } catch (_) {}
@@ -242,38 +299,14 @@ const server = http.createServer(async (req, res) => {
             if (!u) return sendJson(res, 400, { error: 'invalid hwid' });
             const plan = planById(data.planId);
             if (!plan) return sendJson(res, 400, { error: 'invalid plan' });
-            const method = data.method === 'card' ? 'card' : 'sbp';
-            const orderId = 'ord_' + crypto.randomBytes(8).toString('hex');
-
-            try {
-                const pay = await createAyfoPayment({
-                    amount: plan.price,
-                    method,
-                    customerReference: orderId,
-                    description: `Apex VPN ${plan.title} (${u.userId})`,
-                });
-                if (!pay || !pay.id || !pay.url) {
-                    return sendJson(res, 502, { error: 'bad AyfoPay response' });
-                }
-                orders[pay.id] = {
-                    orderId,
-                    userId: u.userId,
-                    hwid: u.hwid,
-                    planId: plan.id,
-                    days: plan.days,
-                    amount: plan.price,
-                    method,
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    paidAt: 0,
-                };
-                persistOrders();
-                console.log(`[apex] payment created ayfoId=${pay.id} user=${u.userId} plan=${plan.id} ${plan.price}r ${method}`);
-                return sendJson(res, 200, { id: pay.id, url: pay.url, amount: pay.amount, method });
-            } catch (e) {
-                console.error('[apex] pay error:', e.message);
-                return sendJson(res, 502, { error: 'payment_failed', detail: e.message });
+            if ((u.balance || 0) < plan.price) {
+                return sendJson(res, 402, { error: 'insufficient_funds', balance: u.balance || 0, price: plan.price });
             }
+            // Списываем и продлеваем атомарно (в одном процессе — гонок нет)
+            u.balance = (u.balance || 0) - plan.price;
+            extendSubscription(u, plan.days); // вызывает persistUsers()
+            console.log(`[apex] BUY user=${u.userId} plan=${plan.id} -${plan.price}r balance=${u.balance} -> subUntil=${new Date(u.subUntil).toISOString()}`);
+            return sendJson(res, 200, { ok: true, ...publicProfile(u) });
         }
 
         // Webhook от AyfoPay (только с их IP — ограничить на уровне firewall/nginx: 109.120.177.0)
@@ -299,8 +332,16 @@ const server = http.createServer(async (req, res) => {
                 persistOrders();
                 const hwidUser = users[order.hwid];
                 if (hwidUser) {
-                    extendSubscription(hwidUser, order.days);
-                    console.log(`[apex] PAID id=${id} user=${order.userId} +${order.days}d -> subUntil=${new Date(hwidUser.subUntil).toISOString()}`);
+                    if (order.type === 'topup') {
+                        // Пополнение баланса
+                        hwidUser.balance = (hwidUser.balance || 0) + order.amount;
+                        persistUsers();
+                        console.log(`[apex] PAID topup id=${id} user=${order.userId} +${order.amount}r -> balance=${hwidUser.balance}`);
+                    } else {
+                        // Историческая прямая покупка тарифа (старые pending-заказы)
+                        extendSubscription(hwidUser, order.days);
+                        console.log(`[apex] PAID plan id=${id} user=${order.userId} +${order.days}d -> subUntil=${new Date(hwidUser.subUntil).toISOString()}`);
+                    }
                 }
             }
             return sendJson(res, 200, { ok: true });
@@ -308,7 +349,7 @@ const server = http.createServer(async (req, res) => {
 
         // health
         if (req.method === 'GET' && route === '/api/health') {
-            return sendJson(res, 200, { ok: true, ayfopay: !!API_KEY, users: Object.keys(users).length });
+            return sendJson(res, 200, { ok: true, ayfopay: !!API_KEY, users: Object.keys(users).length, balance: true });
         }
 
         sendJson(res, 404, { error: 'not found' });

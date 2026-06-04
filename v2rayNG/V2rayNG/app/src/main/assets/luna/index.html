@@ -277,9 +277,30 @@
         .tariff-price { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
         .tariff-price span { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
         .tariff-perm { font-size: 11px; color: var(--text-tertiary); }
-        .tariff-buy { margin-top: 6px; background: linear-gradient(105deg, var(--accent), #2a5298); color: #fff; border: none; border-radius: 12px; padding: 9px 0; font-weight: 700; font-size: 13px; font-family: inherit; cursor: pointer; transition: transform var(--transition); }
+        .tariff-buy { margin-top: 6px; background: linear-gradient(105deg, var(--accent), #2a5298); color: #fff; border: none; border-radius: 12px; padding: 9px 0; font-weight: 700; font-size: 13px; font-family: inherit; cursor: pointer; transition: transform var(--transition), opacity var(--transition); }
         .tariff-buy:active { transform: scale(0.96); }
+        .tariff-buy:disabled { opacity: 0.5; cursor: default; }
         .pay-hint { font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.5; padding: 0 8px 8px; }
+
+        /* ===== Баланс ===== */
+        .balance-card { background: linear-gradient(135deg, var(--accent), #2a5298); border-radius: 24px; padding: 20px 20px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 12px 30px rgba(43,95,158,0.28); position: relative; overflow: hidden; }
+        .balance-card::after { content: ''; position: absolute; top: -40%; right: -20%; width: 60%; height: 160%; background: radial-gradient(ellipse, rgba(255,255,255,0.18) 0%, transparent 70%); pointer-events: none; }
+        .balance-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); letter-spacing: 0.3px; }
+        .balance-value { font-size: 34px; font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -1px; }
+        .balance-value span { font-size: 18px; font-weight: 700; opacity: 0.85; }
+        .balance-topup { margin-top: 12px; background: rgba(255,255,255,0.95); color: var(--accent); border: none; border-radius: 14px; padding: 12px 0; font-weight: 700; font-size: 14px; font-family: inherit; cursor: pointer; transition: transform var(--transition); position: relative; z-index: 1; }
+        .balance-topup:active { transform: scale(0.97); }
+
+        /* ===== Модалка пополнения ===== */
+        .topup-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+        .topup-preset { flex: 1 1 28%; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 0; font-size: 14px; font-weight: 700; color: var(--text); font-family: inherit; cursor: pointer; transition: border-color var(--transition), background var(--transition); }
+        .topup-preset.active { border-color: var(--accent); background: rgba(43,95,158,0.1); color: var(--accent); }
+        .topup-input-wrap { display: flex; align-items: center; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 16px; padding: 4px 16px; transition: border-color var(--transition); }
+        .topup-input-wrap:focus-within { border-color: var(--accent); }
+        .topup-input { flex: 1; background: none; border: none; outline: none; font-family: inherit; font-size: 24px; font-weight: 800; color: var(--text); padding: 12px 0; width: 100%; }
+        .topup-input::-webkit-outer-spin-button, .topup-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .topup-cur { font-size: 22px; font-weight: 700; color: var(--text-tertiary); }
+        .topup-method-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding-left: 2px; }
 
         /* ===== Модалка оплаты ===== */
         .pay-modal { position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -365,24 +386,66 @@
                         <div class="profile-row"><span class="pr-label">Подписка</span><span class="pr-value" id="profSub">—</span></div>
                     </div>
                 </div>
+                <div class="balance-card">
+                    <div class="balance-label">Баланс</div>
+                    <div class="balance-value" id="balanceValue">— <span>₽</span></div>
+                    <button class="balance-topup" id="btnTopup">Пополнить баланс</button>
+                </div>
+                <div class="pay-hint">Пополняйте баланс на любую сумму через СБП или картой, затем оплачивайте тарифы с баланса на вкладке «Тарифы».</div>
+            </div>
+
+            <div id="viewTariffs" style="display:none;">
+                <div class="balance-card">
+                    <div class="balance-label">Ваш баланс</div>
+                    <div class="balance-value" id="balanceValueT">— <span>₽</span></div>
+                    <button class="balance-topup" id="btnTopupT">Пополнить баланс</button>
+                </div>
                 <div class="tariffs-title">Выбор тарифа</div>
                 <div class="tariffs-grid" id="tariffsGrid"></div>
-                <div class="pay-hint">Оплата через AyfoPay — СБП или банковской картой. Подписка активируется автоматически после оплаты.</div>
+                <div class="pay-hint">Тарифы оплачиваются с баланса. Если средств не хватает — сначала пополните баланс.</div>
             </div>
         </div>
 
         <div class="bottom-nav">
             <button class="nav-tab active" id="tabHome"><span class="nav-ic">🛡️</span><span class="nav-lbl">Главная</span></button>
+            <button class="nav-tab" id="tabTariffs"><span class="nav-ic">💎</span><span class="nav-lbl">Тарифы</span></button>
             <button class="nav-tab" id="tabProfile"><span class="nav-ic">👤</span><span class="nav-lbl">Профиль</span></button>
         </div>
 
-        <div class="pay-modal" id="payModal">
+        <div class="pay-modal" id="topupModal">
             <div class="pay-sheet">
-                <div class="panel-header"><div class="panel-title" id="payTitle">Оплата</div><button class="close-btn" id="payClose">✕</button></div>
-                <div class="pay-amount" id="payAmount">—</div>
-                <button class="pay-method-btn" id="paySbp"><span>СБП</span><span class="pm-sub">Система быстрых платежей</span></button>
-                <button class="pay-method-btn" id="payCard"><span>Банковская карта</span><span class="pm-sub">Visa · MasterCard · МИР</span></button>
-                <div class="pay-status" id="payStatus"></div>
+                <div class="panel-header"><div class="panel-title">Пополнение баланса</div><button class="close-btn" id="topupClose">✕</button></div>
+                <div class="topup-presets" id="topupPresets">
+                    <button class="topup-preset" data-amount="100">100 ₽</button>
+                    <button class="topup-preset" data-amount="300">300 ₽</button>
+                    <button class="topup-preset" data-amount="500">500 ₽</button>
+                    <button class="topup-preset" data-amount="1000">1000 ₽</button>
+                    <button class="topup-preset" data-amount="2000">2000 ₽</button>
+                    <button class="topup-preset" data-amount="5000">5000 ₽</button>
+                </div>
+                <div class="topup-input-wrap">
+                    <input class="topup-input" id="topupInput" type="number" inputmode="numeric" placeholder="Своя сумма" min="50" max="50000">
+                    <span class="topup-cur">₽</span>
+                </div>
+                <div class="topup-method-label">Способ оплаты</div>
+                <button class="pay-method-btn" id="topupSbp"><span>СБП</span><span class="pm-sub">Система быстрых платежей</span></button>
+                <button class="pay-method-btn" id="topupCard"><span>Банковская карта</span><span class="pm-sub">Visa · MasterCard · МИР</span></button>
+                <div class="pay-status" id="topupStatus"></div>
+            </div>
+        </div>
+
+        <div class="pay-modal" id="buyModal">
+            <div class="pay-sheet">
+                <div class="panel-header"><div class="panel-title" id="buyTitle">Покупка тарифа</div><button class="close-btn" id="buyClose">✕</button></div>
+                <div class="pay-amount" id="buyAmount">—</div>
+                <div class="profile-rows" style="margin-top:0;">
+                    <div class="profile-row"><span class="pr-label">Тариф</span><span class="pr-value" id="buyPlanName">—</span></div>
+                    <div class="profile-row"><span class="pr-label">Спишется с баланса</span><span class="pr-value" id="buyPrice">—</span></div>
+                    <div class="profile-row"><span class="pr-label">Баланс после</span><span class="pr-value" id="buyAfter">—</span></div>
+                </div>
+                <button class="balance-topup" id="buyConfirm" style="background:linear-gradient(105deg,var(--accent),#2a5298);color:#fff;margin-top:14px;">Оплатить с баланса</button>
+                <button class="balance-topup" id="buyGotoTopup" style="display:none;background:var(--card-bg);color:var(--accent);margin-top:8px;border:1.5px solid var(--border);">Пополнить баланс</button>
+                <div class="pay-status" id="buyStatus"></div>
             </div>
         </div>
 
@@ -751,29 +814,48 @@
         const API_BASE = 'https://87-58-213-242.sslip.io:8443';
 
         const tabHome = document.getElementById('tabHome');
+        const tabTariffs = document.getElementById('tabTariffs');
         const tabProfile = document.getElementById('tabProfile');
         const viewHome = document.getElementById('viewHome');
+        const viewTariffs = document.getElementById('viewTariffs');
         const viewProfile = document.getElementById('viewProfile');
         let profileLoaded = false;
+        let lastProfile = null;          // последний загруженный профиль (для баланса/покупки)
         let myHwid = '';
         try { myHwid = (Bridge && Bridge.getHwid) ? (Bridge.getHwid() || '') : ''; } catch (_) {}
 
-        function switchTab(profile) {
-            viewHome.style.display = profile ? 'none' : '';
-            viewProfile.style.display = profile ? '' : 'none';
-            tabHome.classList.toggle('active', !profile);
-            tabProfile.classList.toggle('active', profile);
-            if (profile && !profileLoaded) loadProfile();
+        // tab: 'home' | 'tariffs' | 'profile'
+        function switchTab(tab) {
+            viewHome.style.display = tab === 'home' ? '' : 'none';
+            viewTariffs.style.display = tab === 'tariffs' ? '' : 'none';
+            viewProfile.style.display = tab === 'profile' ? '' : 'none';
+            tabHome.classList.toggle('active', tab === 'home');
+            tabTariffs.classList.toggle('active', tab === 'tariffs');
+            tabProfile.classList.toggle('active', tab === 'profile');
+            if ((tab === 'profile' || tab === 'tariffs') && !profileLoaded) loadProfile();
         }
-        tabHome.addEventListener('click', () => switchTab(false));
-        tabProfile.addEventListener('click', () => switchTab(true));
+        tabHome.addEventListener('click', () => switchTab('home'));
+        tabTariffs.addEventListener('click', () => switchTab('tariffs'));
+        tabProfile.addEventListener('click', () => switchTab('profile'));
 
         function fmtDate(ms) {
             try { const d = new Date(ms); return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }); }
             catch (_) { return '—'; }
         }
+        function fmtMoney(n) {
+            return (Math.round(Number(n) || 0)).toLocaleString('ru-RU');
+        }
+
+        function renderBalance(p) {
+            const html = `${fmtMoney(p.balance)} <span>₽</span>`;
+            const a = document.getElementById('balanceValue');
+            const b = document.getElementById('balanceValueT');
+            if (a) a.innerHTML = html;
+            if (b) b.innerHTML = html;
+        }
 
         function renderProfile(p) {
+            lastProfile = p;
             document.getElementById('profUserId').textContent = p.userId || '—';
             document.getElementById('profHwid').textContent = p.hwid || myHwid || '—';
             const badge = document.getElementById('subBadge');
@@ -787,6 +869,7 @@
                 badge.className = 'profile-badge expired';
                 sub.textContent = 'нет активной подписки';
             }
+            renderBalance(p);
             if (Array.isArray(p.plans)) renderTariffs(p.plans);
         }
 
@@ -803,11 +886,11 @@
                     `<div class="tariff-name">${plan.title}</div>` +
                     `<div class="tariff-price">${plan.price} <span>₽</span></div>` +
                     `<div class="tariff-perm">≈ ${perMonth} ₽/мес</div>` +
-                    `<button class="tariff-buy" data-plan="${plan.id}" data-price="${plan.price}" data-title="${plan.title}">Купить</button>`;
+                    `<button class="tariff-buy" data-plan="${plan.id}" data-price="${plan.price}" data-title="${plan.title}">Купить с баланса</button>`;
                 grid.appendChild(card);
             });
             grid.querySelectorAll('.tariff-buy').forEach(btn => {
-                btn.addEventListener('click', () => openPay(btn.dataset.plan, btn.dataset.price, btn.dataset.title));
+                btn.addEventListener('click', () => openBuy(btn.dataset.plan, Number(btn.dataset.price), btn.dataset.title));
             });
         }
 
@@ -830,50 +913,125 @@
             }
         }
 
-        // ----- Оплата -----
-        const payModal = document.getElementById('payModal');
-        const payAmountEl = document.getElementById('payAmount');
-        const payTitleEl = document.getElementById('payTitle');
-        const payStatusEl = document.getElementById('payStatus');
-        let payPlanId = null;
+        // ----- Покупка тарифа с баланса -----
+        const buyModal = document.getElementById('buyModal');
+        const buyConfirmBtn = document.getElementById('buyConfirm');
+        const buyGotoTopupBtn = document.getElementById('buyGotoTopup');
+        const buyStatusEl = document.getElementById('buyStatus');
+        let buyPlanId = null;
+        let buyPlanPrice = 0;
 
-        function openPay(planId, price, title) {
-            payPlanId = planId;
-            payTitleEl.textContent = title || 'Оплата';
-            payAmountEl.textContent = `${price} ₽`;
-            payStatusEl.textContent = '';
-            payModal.classList.add('open');
+        function openBuy(planId, price, title) {
+            buyPlanId = planId;
+            buyPlanPrice = price;
+            const balance = lastProfile ? (lastProfile.balance || 0) : 0;
+            const enough = balance >= price;
+            document.getElementById('buyTitle').textContent = 'Покупка тарифа';
+            document.getElementById('buyAmount').textContent = title || '';
+            document.getElementById('buyPlanName').textContent = title || '—';
+            document.getElementById('buyPrice').textContent = `${fmtMoney(price)} ₽`;
+            document.getElementById('buyAfter').textContent = enough
+                ? `${fmtMoney(balance - price)} ₽`
+                : `не хватает ${fmtMoney(price - balance)} ₽`;
+            buyConfirmBtn.style.display = enough ? '' : 'none';
+            buyGotoTopupBtn.style.display = enough ? 'none' : '';
+            buyStatusEl.textContent = enough ? '' : `На балансе ${fmtMoney(balance)} ₽`;
+            buyModal.classList.add('open');
         }
-        function closePay() { payModal.classList.remove('open'); }
-        document.getElementById('payClose').addEventListener('click', closePay);
-        payModal.addEventListener('click', (e) => { if (e.target === payModal) closePay(); });
+        function closeBuy() { buyModal.classList.remove('open'); }
+        document.getElementById('buyClose').addEventListener('click', closeBuy);
+        buyModal.addEventListener('click', (e) => { if (e.target === buyModal) closeBuy(); });
+        buyGotoTopupBtn.addEventListener('click', () => { closeBuy(); openTopup(); });
 
-        async function startPayment(method) {
-            if (!payPlanId) return;
-            payStatusEl.textContent = 'Создаём счёт…';
+        buyConfirmBtn.addEventListener('click', async () => {
+            if (!buyPlanId) return;
+            buyConfirmBtn.disabled = true;
+            buyStatusEl.textContent = 'Оплата…';
             try {
-                const r = await fetch(`${API_BASE}/api/pay`, {
+                const r = await fetch(`${API_BASE}/api/buy`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hwid: myHwid, planId: payPlanId, method })
+                    body: JSON.stringify({ hwid: myHwid, planId: buyPlanId })
+                });
+                const d = await r.json();
+                if (d && d.ok) {
+                    renderProfile(d);                 // обновляем баланс/подписку из ответа
+                    buyStatusEl.textContent = '✓ Подписка активирована';
+                    setTimeout(() => { closeBuy(); switchTab('profile'); }, 900);
+                } else if (d && d.error === 'insufficient_funds') {
+                    buyStatusEl.textContent = 'Недостаточно средств — пополните баланс';
+                } else {
+                    buyStatusEl.textContent = 'Ошибка: ' + (d && d.error ? d.error : 'не удалось купить');
+                }
+            } catch (e) {
+                buyStatusEl.textContent = 'Сервер недоступен';
+            } finally {
+                buyConfirmBtn.disabled = false;
+            }
+        });
+
+        // ----- Пополнение баланса (через AyfoPay) -----
+        const topupModal = document.getElementById('topupModal');
+        const topupInput = document.getElementById('topupInput');
+        const topupStatusEl = document.getElementById('topupStatus');
+        const topupPresets = document.getElementById('topupPresets');
+
+        function openTopup() {
+            topupStatusEl.textContent = '';
+            topupModal.classList.add('open');
+        }
+        function closeTopup() { topupModal.classList.remove('open'); }
+        document.getElementById('btnTopup').addEventListener('click', openTopup);
+        document.getElementById('btnTopupT').addEventListener('click', openTopup);
+        document.getElementById('topupClose').addEventListener('click', closeTopup);
+        topupModal.addEventListener('click', (e) => { if (e.target === topupModal) closeTopup(); });
+
+        topupPresets.querySelectorAll('.topup-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                topupPresets.querySelectorAll('.topup-preset').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                topupInput.value = btn.dataset.amount;
+            });
+        });
+        topupInput.addEventListener('input', () => {
+            topupPresets.querySelectorAll('.topup-preset').forEach(b => b.classList.remove('active'));
+        });
+
+        async function startTopup(method) {
+            const amount = Math.round(Number(topupInput.value));
+            if (!Number.isFinite(amount) || amount < 50) {
+                topupStatusEl.textContent = 'Минимальная сумма — 50 ₽';
+                return;
+            }
+            if (amount > 50000) {
+                topupStatusEl.textContent = 'Максимальная сумма — 50 000 ₽';
+                return;
+            }
+            topupStatusEl.textContent = 'Создаём счёт…';
+            try {
+                const r = await fetch(`${API_BASE}/api/topup`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hwid: myHwid, amount, method })
                 });
                 const d = await r.json();
                 if (d && d.url) {
-                    payStatusEl.textContent = 'Открываем оплату…';
+                    topupStatusEl.textContent = 'Открываем оплату…';
                     if (Bridge && Bridge.openUrl) Bridge.openUrl(d.url); else window.open(d.url, '_blank');
-                    setTimeout(() => { closePay(); profileLoaded = false; }, 800);
+                    setTimeout(() => { closeTopup(); profileLoaded = false; }, 800);
                 } else {
-                    payStatusEl.textContent = 'Ошибка: ' + (d && d.error ? d.error : 'не удалось создать платёж');
+                    topupStatusEl.textContent = 'Ошибка: ' + (d && d.error ? d.error : 'не удалось создать платёж');
                 }
             } catch (e) {
-                payStatusEl.textContent = 'Сервер оплаты недоступен';
+                topupStatusEl.textContent = 'Сервер оплаты недоступен';
             }
         }
-        document.getElementById('paySbp').addEventListener('click', () => startPayment('sbp'));
-        document.getElementById('payCard').addEventListener('click', () => startPayment('card'));
+        document.getElementById('topupSbp').addEventListener('click', () => startTopup('sbp'));
+        document.getElementById('topupCard').addEventListener('click', () => startTopup('card'));
 
-        // Обновляем профиль при возврате в приложение (после оплаты в браузере)
+        // Обновляем профиль при возврате в приложение (после пополнения в браузере)
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && viewProfile.style.display !== 'none') { profileLoaded = false; loadProfile(); }
+            if (!document.hidden && (viewProfile.style.display !== 'none' || viewTariffs.style.display !== 'none')) {
+                profileLoaded = false; loadProfile();
+            }
         });
     </script>
 </body>
