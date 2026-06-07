@@ -48,9 +48,14 @@
                         android:id="@+id/tab_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:tabIndicatorFullWidth="false"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp"
+                        app:tabIndicatorHeight="0dp"
                         app:tabMode="scrollable"
-                        app:tabTextAppearance="@style/TabLayoutTextStyle" />
+                        app:tabBackground="@android:color/transparent"
+                        app:tabGravity="center"
+                        app:tabPaddingStart="0dp"
+                        app:tabPaddingEnd="0dp" />
 
                     <androidx.viewpager2.widget.ViewPager2
                         android:id="@+id/view_pager"

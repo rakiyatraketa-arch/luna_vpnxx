@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -19,6 +20,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -97,6 +99,12 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.fab.setOnClickListener { handleFabAction() }
         binding.layoutTest.setOnClickListener { handleLayoutTestClick() }
 
+        binding.tabGroup.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) { tab.customView?.isSelected = true }
+            override fun onTabUnselected(tab: TabLayout.Tab) { tab.customView?.isSelected = false }
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+
         setupGroupTab()
         setupViewModel()
         SubscriptionUpdater.sync()
@@ -125,10 +133,15 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
                 tab.text = it.remarks
                 tab.tag = it.id
             }
+            val cardView = layoutInflater.inflate(R.layout.tab_item_card, binding.tabGroup, false)
+            val tabText = cardView.findViewById<TextView>(R.id.tab_text)
+            tabText.text = groupPagerAdapter.groups.getOrNull(position)?.remarks ?: ""
+            tab.customView = cardView
         }.also { it.attach() }
 
         val targetIndex = groups.indexOfFirst { it.id == mainViewModel.subscriptionId }.takeIf { it >= 0 } ?: (groups.size - 1)
         binding.viewPager.setCurrentItem(targetIndex, false)
+        binding.tabGroup.getTabAt(targetIndex)?.customView?.isSelected = true
 
         binding.tabGroup.isVisible = groups.size > 1
     }

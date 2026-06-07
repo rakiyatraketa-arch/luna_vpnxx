@@ -8,6 +8,10 @@
     <color name="color_fab_inactive">#9C9C9C</color>
     <color name="divider_color_light">#E0E0E0</color>
     <color name="colorIndicator">@color/md_theme_primary</color>
+    <color name="tab_card_bg_selected">#f97910</color>
+    <color name="tab_card_bg_normal">#F0F0F0</color>
+    <color name="tab_text_selected">#FFFFFF</color>
+    <color name="tab_text_normal">#555555</color>
 
     <!-- Primary colors - main tone: black -->
     <color name="md_theme_primary">#000000</color>

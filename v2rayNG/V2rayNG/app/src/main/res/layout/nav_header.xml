@@ -2,10 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/view_height_dp160"
-    android:background="@drawable/nav_header_bg"
+    android:background="#000000"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="@dimen/padding_spacing_dp16">
+
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="8dp"
+        android:src="@mipmap/ic_launcher"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/app_name" />
 
     <TextView
         android:layout_width="match_parent"
@@ -13,9 +21,8 @@
         android:layout_gravity="center"
         android:fontFamily="@font/montserrat_thin"
         android:gravity="center"
-        android:paddingTop="@dimen/padding_spacing_dp8"
         android:text="@string/app_name"
-        android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
-
+        android:textColor="#FFFFFF"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
 </LinearLayout>
