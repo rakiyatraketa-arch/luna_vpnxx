@@ -417,7 +417,10 @@
                     <div class="logo-icon"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
                     <div class="app-title">Apex VPN</div>
                 </div>
-                <div class="header-actions"><button class="icon-btn" id="settingsBtn">⚙️</button></div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="admBtn" style="display:none">🛡</button>
+                    <button class="icon-btn" id="settingsBtn">⚙️</button>
+                </div>
             </div>
 
             <div id="viewHome">
@@ -1252,30 +1255,37 @@
         // ===== ADMIN PANEL =====
         (function () {
             let adminToken = '';
-            let tapCount = 0, tapTimer = null;
-
-            // 7 быстрых тапов по названию «Apex VPN» открывают панель
-            const trigger = document.querySelector('.app-title');
-            if (trigger) {
-                trigger.addEventListener('click', () => {
-                    tapCount++;
-                    clearTimeout(tapTimer);
-                    tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
-                    if (tapCount >= 7) { tapCount = 0; openAdmin(); }
-                });
-            }
 
             const overlay = document.getElementById('admOverlay');
             const loginSec = document.getElementById('admLogin');
             const dash = document.getElementById('admDash');
             const loginErr = document.getElementById('admLoginErr');
+            const admBtn = document.getElementById('admBtn');
 
             function openAdmin() {
                 overlay.classList.remove('hidden');
                 if (adminToken) { loginSec.classList.add('hidden'); dash.classList.remove('hidden'); loadStats(); }
                 else { loginSec.classList.remove('hidden'); dash.classList.add('hidden'); }
             }
+            if (admBtn) admBtn.addEventListener('click', openAdmin);
             document.getElementById('admClose').addEventListener('click', () => overlay.classList.add('hidden'));
+
+            // Автологин по HWID устройства
+            (async function tryHwidLogin() {
+                try {
+                    const hwid = (typeof LunaBridge !== 'undefined' && LunaBridge.getHwid) ? LunaBridge.getHwid() : null;
+                    if (!hwid) return;
+                    const r = await fetch(`${API_BASE}/api/admin/hwid-login`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hwid })
+                    });
+                    const d = await r.json();
+                    if (d.token) {
+                        adminToken = d.token;
+                        if (admBtn) admBtn.style.display = '';
+                    }
+                } catch (_) {}
+            })();
 
             document.getElementById('admLoginBtn').addEventListener('click', async () => {
                 const user = document.getElementById('admUser').value.trim();

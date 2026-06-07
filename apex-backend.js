@@ -44,6 +44,7 @@ const AYFOPAY_HOST = 'api.ayfopay.com';
 const MAX_BODY = 32 * 1024;
 const ADMIN_USER = process.env.ADMIN_USER || '';
 const ADMIN_PASS = process.env.ADMIN_PASS || '';
+const ADMIN_HWID = (process.env.ADMIN_HWID || '').toUpperCase().trim();
 
 // Лимиты пополнения баланса (рубли). Любая сумма в этом диапазоне.
 const MIN_TOPUP = 50;
@@ -477,6 +478,18 @@ const server = http.createServer(async (req, res) => {
             const token = newAdminToken();
             adminSessions.set(token, Date.now() + ADMIN_TTL);
             console.log('[admin] LOGIN');
+            return sendJson(res, 200, { token });
+        }
+
+        // ===== Admin: HWID login (admin device, no password needed) =====
+        if (req.method === 'POST' && route === '/api/admin/hwid-login') {
+            if (!ADMIN_HWID) return sendJson(res, 503, { error: 'admin_hwid_not_configured' });
+            const data = await readJson(req);
+            const hwid = String(data.hwid || '').toUpperCase().trim();
+            if (!hwid || hwid !== ADMIN_HWID) return sendJson(res, 401, { error: 'bad_hwid' });
+            const token = newAdminToken();
+            adminSessions.set(token, Date.now() + ADMIN_TTL);
+            console.log('[admin] HWID LOGIN');
             return sendJson(res, 200, { token });
         }
 
