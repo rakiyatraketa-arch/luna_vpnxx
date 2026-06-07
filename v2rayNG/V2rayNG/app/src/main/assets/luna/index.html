@@ -555,6 +555,30 @@
         </div>
     </div>
 
+    <!-- Admin Panel Overlay -->
+    <div id="admOverlay" class="adm-overlay hidden">
+        <div class="adm-header">
+            <div class="adm-header-title">⚙️ Панель управления</div>
+            <button id="admClose" class="adm-close">✕</button>
+        </div>
+        <div class="adm-body">
+            <div id="admLogin" class="adm-login">
+                <input id="admUser" class="adm-input" type="text" placeholder="Логин" autocomplete="off" autocapitalize="none">
+                <input id="admPass" class="adm-input" type="password" placeholder="Пароль">
+                <button id="admLoginBtn" class="adm-btn">Войти</button>
+                <div id="admLoginErr" class="adm-err"></div>
+            </div>
+            <div id="admDash" class="hidden">
+                <div class="adm-tabs">
+                    <button class="adm-tab active" data-t="stats">Статистика</button>
+                    <button class="adm-tab" data-t="cfg">Конфиги ВПН</button>
+                </div>
+                <div id="admTabStats"></div>
+                <div id="admTabCfg" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * Apex VPN — WebView UI поверх форка v2rayNG.
@@ -1417,28 +1441,5 @@
         })();
     </script>
 
-    <!-- Admin Panel Overlay -->
-    <div id="admOverlay" class="adm-overlay hidden">
-        <div class="adm-header">
-            <div class="adm-header-title">⚙️ Панель управления</div>
-            <button id="admClose" class="adm-close">✕</button>
-        </div>
-        <div class="adm-body">
-            <div id="admLogin" class="adm-login">
-                <input id="admUser" class="adm-input" type="text" placeholder="Логин" autocomplete="off" autocapitalize="none">
-                <input id="admPass" class="adm-input" type="password" placeholder="Пароль">
-                <button id="admLoginBtn" class="adm-btn">Войти</button>
-                <div id="admLoginErr" class="adm-err"></div>
-            </div>
-            <div id="admDash" class="hidden">
-                <div class="adm-tabs">
-                    <button class="adm-tab active" data-t="stats">Статистика</button>
-                    <button class="adm-tab" data-t="cfg">Конфиги ВПН</button>
-                </div>
-                <div id="admTabStats"></div>
-                <div id="admTabCfg" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
