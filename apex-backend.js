@@ -42,6 +42,8 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'apex-data');
 const API_KEY = process.env.AYFOPAY_API_KEY || '';
 const AYFOPAY_HOST = 'api.ayfopay.com';
 const MAX_BODY = 32 * 1024;
+const ADMIN_USER = process.env.ADMIN_USER || '';
+const ADMIN_PASS = process.env.ADMIN_PASS || '';
 
 // Лимиты пополнения баланса (рубли). Любая сумма в этом диапазоне.
 const MIN_TOPUP = 50;
@@ -88,6 +90,52 @@ let orders = loadJson('orders.json', {});
 
 function persistAccounts() { saveJson('accounts.json', accounts); }
 function persistOrders() { saveJson('orders.json', orders); }
+
+// ===================== Admin sessions =====================
+
+const adminSessions = new Map(); // token -> expiresAt
+const ADMIN_TTL = 24 * 60 * 60 * 1000;
+
+function newAdminToken() { return crypto.randomBytes(24).toString('hex'); }
+function isAdminAuth(req) {
+    const h = req.headers['authorization'] || '';
+    const token = h.replace(/^Bearer\s+/i, '').trim();
+    if (!token) return false;
+    const exp = adminSessions.get(token);
+    if (!exp || Date.now() > exp) { adminSessions.delete(token); return false; }
+    adminSessions.set(token, Date.now() + ADMIN_TTL);
+    return true;
+}
+
+// ===================== VPN Configs =====================
+
+function makeDefaultConfigs() {
+    return [
+        { id: crypto.randomBytes(8).toString('hex'), country: 'Нидерланды', flag: '🇳🇱',
+          host: '87.58.210.202',
+          json: '{"remarks":"🇳🇱 НИДЕРЛАНДЫ","log":{"loglevel":"warning"},"policy":{"levels":{"0":{"connIdle":86400,"uplinkOnly":2,"downlinkOnly":5}},"system":{"statsInboundUplink":false,"statsInboundDownlink":false}},"dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"tag":"socks","port":10808,"listen":"127.0.0.1","protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"enabled":true,"destOverride":["http","tls","quic"],"routeOnly":false}},{"tag":"http","port":10809,"listen":"127.0.0.1","protocol":"http","settings":{"allowTransparent":false},"sniffing":{"enabled":true,"destOverride":["http","tls","quic"],"routeOnly":false}}],"outbounds":[{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"87.58.210.202","port":443,"users":[{"id":"b26ea3f1-2b4a-488e-88e3-6a2d53948612","encryption":"none","flow":"xtls-rprx-vision"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"show":false,"serverName":"apex-vpn.space","fingerprint":"firefox","publicKey":"yorIh_8ynxvblP-UesrdyInTF7JM2rJ3S_ddJO4ITHQ","shortId":"deaaa71eea0044","spiderX":"/"}}},{"tag":"direct","protocol":"freedom"},{"tag":"block","protocol":"blackhole"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"AsIs","rules":[{"type":"field","outboundTag":"direct","protocol":["bittorrent"]}]}}'
+        },
+        { id: crypto.randomBytes(8).toString('hex'), country: 'Германия', flag: '🇩🇪',
+          host: 'de1.motion-vpn.com',
+          json: '{"remarks":"🇩🇪 Германия | Wi-FI 💎","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"de1.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"WxbUVzJnN7jvIf1zMkCD93RzdMo8K1voxWjplVkc1Bw","serverName":"de1.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}'
+        },
+        { id: crypto.randomBytes(8).toString('hex'), country: 'Россия', flag: '🇷🇺',
+          host: 'noderu2.motion-vpn.com',
+          json: '{"remarks":"🇷🇺 Россия [Игры, Discord] 💎","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"noderu2.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"NhIxhHDxYR9HEhlnDcacIVg8S4Z5lw8aWg6HZIUeBzo","serverName":"noderu2.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}'
+        },
+        { id: crypto.randomBytes(8).toString('hex'), country: 'Швейцария', flag: '🇨🇭',
+          host: 'sd.motion-vpn.com',
+          json: '{"remarks":"🇨🇭 Швейцария | WI-FI","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"sd.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w","serverName":"sd.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}'
+        }
+    ];
+}
+
+let vpnConfigs = loadJson('configs.json', null);
+if (!Array.isArray(vpnConfigs)) {
+    vpnConfigs = makeDefaultConfigs();
+    saveJson('configs.json', vpnConfigs);
+}
+function persistConfigs() { saveJson('configs.json', vpnConfigs); }
 
 // ===================== Аккаунты / авторизация =====================
 
@@ -412,6 +460,78 @@ const server = http.createServer(async (req, res) => {
         // health
         if (req.method === 'GET' && route === '/api/health') {
             return sendJson(res, 200, { ok: true, ayfopay: !!API_KEY, accounts: Object.keys(accounts).length, auth: true });
+        }
+
+        // ===== Public VPN configs (app fetches on startup) =====
+        if (req.method === 'GET' && route === '/api/configs') {
+            return sendJson(res, 200, { configs: vpnConfigs.map(c => ({ id: c.id, country: c.country, flag: c.flag, host: c.host || '', json: c.json })) });
+        }
+
+        // ===== Admin: login =====
+        if (req.method === 'POST' && route === '/api/admin/login') {
+            if (!ADMIN_USER || !ADMIN_PASS) return sendJson(res, 503, { error: 'admin_not_configured' });
+            const data = await readJson(req);
+            if (String(data.user || '') !== ADMIN_USER || String(data.pass || '') !== ADMIN_PASS) {
+                return sendJson(res, 401, { error: 'bad_credentials' });
+            }
+            const token = newAdminToken();
+            adminSessions.set(token, Date.now() + ADMIN_TTL);
+            console.log('[admin] LOGIN');
+            return sendJson(res, 200, { token });
+        }
+
+        // ===== Admin: stats =====
+        if (req.method === 'GET' && route === '/api/admin/stats') {
+            if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
+            const now = Date.now();
+            let activeSubscriptions = 0, totalBalance = 0;
+            for (const a of Object.values(accounts)) {
+                if (a.subUntil > now) activeSubscriptions++;
+                totalBalance += a.balance || 0;
+            }
+            return sendJson(res, 200, {
+                health: true,
+                ayfopay: !!API_KEY,
+                totalAccounts: Object.keys(accounts).length,
+                activeSubscriptions,
+                totalBalance,
+                totalConfigs: vpnConfigs.length,
+            });
+        }
+
+        // ===== Admin: list configs =====
+        if (req.method === 'GET' && route === '/api/admin/configs') {
+            if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
+            return sendJson(res, 200, { configs: vpnConfigs });
+        }
+
+        // ===== Admin: add config =====
+        if (req.method === 'POST' && route === '/api/admin/configs') {
+            if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
+            const data = await readJson(req);
+            if (!data.country || !data.json) return sendJson(res, 400, { error: 'country and json required' });
+            let host = data.host || '';
+            if (!host) {
+                try { host = JSON.parse(data.json)?.outbounds?.[0]?.settings?.vnext?.[0]?.address || ''; } catch (_) {}
+            }
+            const cfg = { id: crypto.randomBytes(8).toString('hex'), country: String(data.country), flag: String(data.flag || '🌐'), host, json: String(data.json) };
+            vpnConfigs.push(cfg);
+            persistConfigs();
+            console.log(`[admin] ADD config country=${cfg.country}`);
+            return sendJson(res, 200, { ok: true, config: cfg });
+        }
+
+        // ===== Admin: delete config =====
+        const delMatch = route.match(/^\/api\/admin\/configs\/([a-f0-9]+)$/);
+        if (req.method === 'DELETE' && delMatch) {
+            if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
+            const id = delMatch[1];
+            const before = vpnConfigs.length;
+            vpnConfigs = vpnConfigs.filter(c => c.id !== id);
+            if (vpnConfigs.length === before) return sendJson(res, 404, { error: 'not found' });
+            persistConfigs();
+            console.log(`[admin] DELETE config id=${id}`);
+            return sendJson(res, 200, { ok: true });
         }
 
         sendJson(res, 404, { error: 'not found' });

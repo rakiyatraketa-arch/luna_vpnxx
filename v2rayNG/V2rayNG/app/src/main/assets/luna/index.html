@@ -339,6 +339,38 @@
         /* Кнопка выхода в профиле */
         .logout-btn { background: var(--card-bg); border: 1.5px solid var(--border); color: #ef4444; border-radius: 14px; padding: 13px 0; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: border-color var(--transition); width: 100%; }
         .logout-btn:active { border-color: #ef4444; }
+        /* ===== Admin Panel ===== */
+        .adm-overlay { position: fixed; inset: 0; background: #0b0f19; z-index: 9999; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
+        .adm-overlay.hidden { display: none; }
+        .adm-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: #111827; border-bottom: 1px solid #1f2937; flex-shrink: 0; }
+        .adm-header-title { color: #f9fafb; font-size: 15px; font-weight: 700; }
+        .adm-close { background: none; border: none; color: #6b7280; font-size: 22px; cursor: pointer; padding: 2px 8px; line-height: 1; }
+        .adm-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .adm-login { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 50px auto 0; width: 100%; }
+        .adm-input { background: #1f2937; border: 1.5px solid #374151; border-radius: 12px; padding: 13px 16px; color: #f9fafb; font-size: 15px; outline: none; font-family: inherit; }
+        .adm-input:focus { border-color: #6b8cce; }
+        .adm-btn { background: #2b5f9e; color: white; border: none; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .adm-btn:active { background: #3b70b0; }
+        .adm-err { color: #ef4444; font-size: 13px; text-align: center; min-height: 18px; }
+        .adm-tabs { display: flex; gap: 6px; border-bottom: 1px solid #1f2937; padding-bottom: 10px; }
+        .adm-tab { background: none; border: none; color: #6b7280; font-size: 13px; font-weight: 600; cursor: pointer; padding: 7px 14px; border-radius: 8px; font-family: inherit; }
+        .adm-tab.active { background: #1f2937; color: #f9fafb; }
+        .adm-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+        .adm-stat { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 14px; }
+        .adm-stat-lbl { color: #6b7280; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .adm-stat-val { color: #f9fafb; font-size: 22px; font-weight: 700; }
+        .adm-stat-val.ok { color: #10b981; }
+        .adm-stat-val.err { color: #ef4444; }
+        .adm-cfg-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+        .adm-cfg-item { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .adm-cfg-name { color: #f9fafb; font-size: 14px; font-weight: 600; }
+        .adm-cfg-host { color: #6b7280; font-size: 12px; margin-top: 2px; }
+        .adm-del { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; font-family: inherit; }
+        .adm-add-btn { background: #111827; color: #6b8cce; border: 1.5px dashed #1f2937; border-radius: 12px; padding: 13px; width: 100%; text-align: center; font-size: 13px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+        .adm-textarea { background: #111827; border: 1.5px solid #374151; border-radius: 12px; padding: 12px; color: #f9fafb; font-size: 11px; font-family: monospace; width: 100%; min-height: 180px; outline: none; resize: vertical; }
+        .adm-textarea:focus { border-color: #6b8cce; }
+        .adm-row { display: flex; gap: 8px; margin-top: 8px; }
+        .adm-btn-sm { background: #374151; color: #f9fafb; border: none; border-radius: 10px; padding: 11px 18px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -419,7 +451,7 @@
                 </div>
                 <div class="dropdown-list" id="dropdownList">
                     <div class="dropdown-item active" data-country="Нидерланды" data-flag="🇳🇱" data-ping="..."><span class="item-flag">🇳🇱</span> Нидерланды <span class="signal-dot" data-country="Нидерланды"></span> <span class="item-ping">...</span></div>
-                    <div class="dropdown-item" data-country="Финляндия" data-flag="🇫🇮" data-ping="..."><span class="item-flag">🇫🇮</span> Финляндия <span class="signal-dot" data-country="Финляндия"></span> <span class="item-ping">...</span></div>
+                    <div class="dropdown-item" data-country="Швейцария" data-flag="🇨🇭" data-ping="..."><span class="item-flag">🇨🇭</span> Швейцария <span class="signal-dot" data-country="Швейцария"></span> <span class="item-ping">...</span></div>
                     <div class="dropdown-item" data-country="Германия" data-flag="🇩🇪" data-ping="..."><span class="item-flag">🇩🇪</span> Германия <span class="signal-dot" data-country="Германия"></span> <span class="item-ping">...</span></div>
                     <div class="dropdown-item" data-country="Россия" data-flag="🇷🇺" data-ping="..."><span class="item-flag">🇷🇺</span> Россия <span class="signal-dot" data-country="Россия"></span> <span class="item-ping">...</span></div>
                 </div>
@@ -1217,6 +1249,186 @@
                 profileLoaded = false; loadProfile();
             }
         });
+        // ===== ADMIN PANEL =====
+        (function () {
+            let adminToken = '';
+            let tapCount = 0, tapTimer = null;
+
+            // 7 быстрых тапов по названию «Apex VPN» открывают панель
+            const trigger = document.querySelector('.app-title');
+            if (trigger) {
+                trigger.addEventListener('click', () => {
+                    tapCount++;
+                    clearTimeout(tapTimer);
+                    tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+                    if (tapCount >= 7) { tapCount = 0; openAdmin(); }
+                });
+            }
+
+            const overlay = document.getElementById('admOverlay');
+            const loginSec = document.getElementById('admLogin');
+            const dash = document.getElementById('admDash');
+            const loginErr = document.getElementById('admLoginErr');
+
+            function openAdmin() {
+                overlay.classList.remove('hidden');
+                if (adminToken) { loginSec.classList.add('hidden'); dash.classList.remove('hidden'); loadStats(); }
+                else { loginSec.classList.remove('hidden'); dash.classList.add('hidden'); }
+            }
+            document.getElementById('admClose').addEventListener('click', () => overlay.classList.add('hidden'));
+
+            document.getElementById('admLoginBtn').addEventListener('click', async () => {
+                const user = document.getElementById('admUser').value.trim();
+                const pass = document.getElementById('admPass').value;
+                loginErr.textContent = 'Вход…';
+                try {
+                    const r = await fetch(`${API_BASE}/api/admin/login`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user, pass })
+                    });
+                    const d = await r.json();
+                    if (d.token) {
+                        adminToken = d.token;
+                        loginSec.classList.add('hidden');
+                        dash.classList.remove('hidden');
+                        loginErr.textContent = '';
+                        loadStats();
+                    } else {
+                        loginErr.textContent = d.error === 'bad_credentials' ? 'Неверный логин или пароль' : (d.error || 'Ошибка');
+                    }
+                } catch (_) { loginErr.textContent = 'Ошибка соединения'; }
+            });
+            document.getElementById('admPass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('admLoginBtn').click(); });
+
+            // Табы
+            document.querySelectorAll('.adm-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.adm-tab').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const t = btn.dataset.t;
+                    document.getElementById('admTabStats').style.display = t === 'stats' ? '' : 'none';
+                    document.getElementById('admTabCfg').style.display = t === 'cfg' ? '' : 'none';
+                    if (t === 'stats') loadStats(); else loadCfgs();
+                });
+            });
+
+            async function admFetch(path, opts = {}) {
+                opts.headers = { ...(opts.headers || {}), 'Authorization': `Bearer ${adminToken}` };
+                return fetch(`${API_BASE}${path}`, opts);
+            }
+
+            async function loadStats() {
+                const el = document.getElementById('admTabStats');
+                el.innerHTML = '<div style="color:#6b7280;padding:16px 0">Загрузка…</div>';
+                try {
+                    const r = await admFetch('/api/admin/stats');
+                    if (r.status === 401) { resetAdmin(); return; }
+                    const d = await r.json();
+                    el.innerHTML = `<div class="adm-stat-grid">
+                        <div class="adm-stat"><div class="adm-stat-lbl">Сервер</div><div class="adm-stat-val ok">● Онлайн</div></div>
+                        <div class="adm-stat"><div class="adm-stat-lbl">AyfoPay</div><div class="adm-stat-val ${d.ayfopay ? 'ok' : 'err'}">${d.ayfopay ? '● Подкл.' : '● Откл.'}</div></div>
+                        <div class="adm-stat"><div class="adm-stat-lbl">Аккаунтов</div><div class="adm-stat-val">${d.totalAccounts}</div></div>
+                        <div class="adm-stat"><div class="adm-stat-lbl">Активных подписок</div><div class="adm-stat-val ok">${d.activeSubscriptions}</div></div>
+                        <div class="adm-stat"><div class="adm-stat-lbl">Баланс в системе</div><div class="adm-stat-val">${(d.totalBalance || 0).toLocaleString('ru-RU')} ₽</div></div>
+                        <div class="adm-stat"><div class="adm-stat-lbl">ВПН конфигов</div><div class="adm-stat-val">${d.totalConfigs}</div></div>
+                    </div>`;
+                } catch (_) { el.innerHTML = '<div style="color:#ef4444">Ошибка загрузки</div>'; }
+            }
+
+            async function loadCfgs() {
+                const el = document.getElementById('admTabCfg');
+                el.innerHTML = '<div style="color:#6b7280;padding:16px 0">Загрузка…</div>';
+                try {
+                    const r = await admFetch('/api/admin/configs');
+                    if (r.status === 401) { resetAdmin(); return; }
+                    const d = await r.json();
+                    let html = '<div class="adm-cfg-list">';
+                    (d.configs || []).forEach(c => {
+                        html += `<div class="adm-cfg-item">
+                            <div><div class="adm-cfg-name">${c.flag} ${c.country}</div><div class="adm-cfg-host">${c.host || '—'}</div></div>
+                            <button class="adm-del" data-id="${c.id}">Удалить</button>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    html += `<button class="adm-add-btn" id="admShowAdd">+ Добавить конфиг</button>
+                        <div id="admAddForm" style="display:none;margin-top:10px;display:flex;flex-direction:column;gap:8px">
+                            <textarea class="adm-textarea" id="admJsonIn" placeholder='Вставьте JSON конфиг (с полем "remarks")…'></textarea>
+                            <div class="adm-row">
+                                <button class="adm-btn" id="admSave" style="flex:1">Сохранить</button>
+                                <button class="adm-btn-sm" id="admCancelAdd">Отмена</button>
+                            </div>
+                            <div class="adm-err" id="admSaveErr"></div>
+                        </div>`;
+                    el.innerHTML = html;
+
+                    el.querySelectorAll('.adm-del').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            if (!confirm('Удалить этот сервер?')) return;
+                            try { await admFetch(`/api/admin/configs/${btn.dataset.id}`, { method: 'DELETE' }); loadCfgs(); }
+                            catch (_) { alert('Ошибка удаления'); }
+                        });
+                    });
+
+                    let addOpen = false;
+                    document.getElementById('admShowAdd').addEventListener('click', () => {
+                        addOpen = !addOpen;
+                        document.getElementById('admAddForm').style.display = addOpen ? 'flex' : 'none';
+                    });
+                    document.getElementById('admCancelAdd').addEventListener('click', () => {
+                        addOpen = false;
+                        document.getElementById('admAddForm').style.display = 'none';
+                    });
+                    document.getElementById('admSave').addEventListener('click', async () => {
+                        const jsonStr = document.getElementById('admJsonIn').value.trim();
+                        const errEl = document.getElementById('admSaveErr');
+                        errEl.textContent = '';
+                        try {
+                            const parsed = JSON.parse(jsonStr);
+                            const remarksRaw = parsed.remarks || 'Без названия';
+                            const flagM = remarksRaw.match(/^\p{Emoji_Presentation}/u);
+                            const flag = flagM ? flagM[0] : '🌐';
+                            const country = remarksRaw.replace(/^\p{Emoji_Presentation}\s*/u, '').trim() || remarksRaw;
+                            const r = await admFetch('/api/admin/configs', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ country, flag, json: jsonStr })
+                            });
+                            const res = await r.json();
+                            if (res.ok) loadCfgs(); else errEl.textContent = res.error || 'Ошибка';
+                        } catch (_) { errEl.textContent = 'Неверный JSON или ошибка сети'; }
+                    });
+                } catch (_) { el.innerHTML = '<div style="color:#ef4444">Ошибка загрузки</div>'; }
+            }
+
+            function resetAdmin() {
+                adminToken = '';
+                dash.classList.add('hidden');
+                loginSec.classList.remove('hidden');
+            }
+        })();
     </script>
+
+    <!-- Admin Panel Overlay -->
+    <div id="admOverlay" class="adm-overlay hidden">
+        <div class="adm-header">
+            <div class="adm-header-title">⚙️ Панель управления</div>
+            <button id="admClose" class="adm-close">✕</button>
+        </div>
+        <div class="adm-body">
+            <div id="admLogin" class="adm-login">
+                <input id="admUser" class="adm-input" type="text" placeholder="Логин" autocomplete="off" autocapitalize="none">
+                <input id="admPass" class="adm-input" type="password" placeholder="Пароль">
+                <button id="admLoginBtn" class="adm-btn">Войти</button>
+                <div id="admLoginErr" class="adm-err"></div>
+            </div>
+            <div id="admDash" class="hidden">
+                <div class="adm-tabs">
+                    <button class="adm-tab active" data-t="stats">Статистика</button>
+                    <button class="adm-tab" data-t="cfg">Конфиги ВПН</button>
+                </div>
+                <div id="admTabStats"></div>
+                <div id="admTabCfg" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

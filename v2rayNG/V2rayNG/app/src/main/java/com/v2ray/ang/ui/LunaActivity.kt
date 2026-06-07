@@ -52,8 +52,8 @@ class LunaActivity : AppCompatActivity() {
         private const val NIDERLANDS_JSON =
             """{"remarks":"🇳🇱 НИДЕРЛАНДЫ","log":{"loglevel":"warning"},"policy":{"levels":{"0":{"connIdle":86400,"uplinkOnly":2,"downlinkOnly":5}},"system":{"statsInboundUplink":false,"statsInboundDownlink":false}},"dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"tag":"socks","port":10808,"listen":"127.0.0.1","protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"enabled":true,"destOverride":["http","tls","quic"],"routeOnly":false}},{"tag":"http","port":10809,"listen":"127.0.0.1","protocol":"http","settings":{"allowTransparent":false},"sniffing":{"enabled":true,"destOverride":["http","tls","quic"],"routeOnly":false}}],"outbounds":[{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"87.58.210.202","port":443,"users":[{"id":"b26ea3f1-2b4a-488e-88e3-6a2d53948612","encryption":"none","flow":"xtls-rprx-vision"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"show":false,"serverName":"apex-vpn.space","fingerprint":"firefox","publicKey":"yorIh_8ynxvblP-UesrdyInTF7JM2rJ3S_ddJO4ITHQ","shortId":"deaaa71eea0044","spiderX":"/"}}},{"tag":"direct","protocol":"freedom"},{"tag":"block","protocol":"blackhole"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"AsIs","rules":[{"type":"field","outboundTag":"direct","protocol":["bittorrent"]}]}}"""
 
-        private const val FINLAND_JSON =
-            """{"remarks":"🇫🇮 Финляндия | WI-FI 💎","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"fl.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w","serverName":"fl.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}"""
+        private const val SWITZERLAND_JSON =
+            """{"remarks":"🇨🇭 Швейцария | WI-FI","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"sd.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w","serverName":"sd.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}"""
 
         private const val GERMANY_JSON =
             """{"remarks":"🇩🇪 ГЕРМАНИЯ","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"de1.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"WxbUVzJnN7jvIf1zMkCD93RzdMo8K1voxWjplVkc1Bw","serverName":"de1.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}"""
@@ -61,28 +61,25 @@ class LunaActivity : AppCompatActivity() {
         private const val RUSSIA_JSON =
             """{"remarks":"🇷🇺 РОССИЯ","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"noderu2.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"NhIxhHDxYR9HEhlnDcacIVg8S4Z5lw8aWg6HZIUeBzo","serverName":"noderu2.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}"""
 
-        // имя локации -> JSON-конфиг
-        private val SERVERS = linkedMapOf(
+        // Локальные запасные конфиги (используются если бэкенд недоступен)
+        private val FALLBACK_SERVERS = linkedMapOf(
             "Нидерланды" to NIDERLANDS_JSON,
-            "Финляндия" to FINLAND_JSON,
             "Германия" to GERMANY_JSON,
-            "Россия" to RUSSIA_JSON
+            "Россия" to RUSSIA_JSON,
+            "Швейцария" to SWITZERLAND_JSON
         )
 
-        // Хосты для пинга
-        private val PING_HOSTS = mapOf(
+        private val FALLBACK_PING_HOSTS = mapOf(
             "Нидерланды" to "87.58.210.202",
-            "Финляндия" to "fl.motion-vpn.com",
             "Германия" to "de1.motion-vpn.com",
-            "Россия" to "noderu2.motion-vpn.com"
+            "Россия" to "noderu2.motion-vpn.com",
+            "Швейцария" to "sd.motion-vpn.com"
         )
 
         private const val PING_PORT = 443
         private const val IP_CHECK_URL = "http://ip-api.com/json"
-
-        // Ключ кэша версии набора серверов. Тяжёлый переимпорт ссылок выполняется
-        // только когда этот хэш изменился (т.е. ссылки реально поменяли).
         private const val CONFIG_VERSION_KEY = "luna_servers_version"
+        private const val REMOTE_CONFIGS_KEY = "luna_remote_configs"
     }
 
     private lateinit var webView: WebView
@@ -93,6 +90,11 @@ class LunaActivity : AppCompatActivity() {
     @Volatile
     private var guidMap: Map<String, String> = emptyMap()
     private var pendingCountry: String? = null
+
+    @Volatile
+    private var activeServers: LinkedHashMap<String, String> = LinkedHashMap(FALLBACK_SERVERS)
+    @Volatile
+    private var activePingHosts: Map<String, String> = FALLBACK_PING_HOSTS
 
     // Корутина пуша трафика (сбор счётчиков в фоне, чтобы не блокировать UI WebView).
     @Volatile
@@ -151,32 +153,84 @@ class LunaActivity : AppCompatActivity() {
             MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_RULESET, 2)
             ensureServers()
             restoreLastServer()
+            fetchAndApplyRemoteConfigs()
         }
     }
 
-    /** Версия набора серверов — меняется при любом изменении ссылок (для кэша переимпорта). */
-    private fun serversVersion(): String = SERVERS.values.joinToString("|").hashCode().toString()
+    private fun serversVersion(): String = activeServers.values.joinToString("|").hashCode().toString()
+
+    private fun loadRemoteServersIfAny() {
+        val raw = MmkvManager.decodeSettingsString(REMOTE_CONFIGS_KEY) ?: return
+        try {
+            val configs = org.json.JSONObject(raw).getJSONArray("configs")
+            if (configs.length() == 0) return
+            val newServers = LinkedHashMap<String, String>()
+            val newPing = mutableMapOf<String, String>()
+            for (i in 0 until configs.length()) {
+                val c = configs.getJSONObject(i)
+                newServers[c.getString("country")] = c.getString("json")
+                val host = c.optString("host", "")
+                if (host.isNotEmpty()) newPing[c.getString("country")] = host
+            }
+            if (newServers.isNotEmpty()) {
+                activeServers = newServers
+                if (newPing.isNotEmpty()) activePingHosts = newPing
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun fetchAndApplyRemoteConfigs() {
+        try {
+            val conn = java.net.URL("${BuildConfig.BACKEND_URL}/api/configs")
+                .openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.setRequestProperty("Accept", "application/json")
+            if (conn.responseCode != 200) return
+            val text = conn.inputStream.bufferedReader().readText()
+            val jo = org.json.JSONObject(text)
+            val configs = jo.getJSONArray("configs")
+            if (configs.length() == 0) return
+            val newServers = LinkedHashMap<String, String>()
+            val newPing = mutableMapOf<String, String>()
+            for (i in 0 until configs.length()) {
+                val c = configs.getJSONObject(i)
+                newServers[c.getString("country")] = c.getString("json")
+                val host = c.optString("host", "")
+                if (host.isNotEmpty()) newPing[c.getString("country")] = host
+            }
+            if (newServers.isEmpty()) return
+            MmkvManager.encodeSettings(REMOTE_CONFIGS_KEY, text)
+            val remoteVersion = newServers.values.joinToString("|").hashCode().toString()
+            val localVersion = activeServers.values.joinToString("|").hashCode().toString()
+            if (remoteVersion != localVersion) {
+                activeServers = newServers
+                if (newPing.isNotEmpty()) activePingHosts = newPing
+                MmkvManager.encodeSettings(CONFIG_VERSION_KEY, "")
+                ensureServers()
+            }
+        } catch (_: Exception) {}
+    }
 
     private fun ensureServers() {
         try {
+            loadRemoteServersIfAny()
             val desiredVersion = serversVersion()
             val storedVersion = MmkvManager.decodeSettingsString(CONFIG_VERSION_KEY)
 
-            // Быстрый путь: ссылки не менялись — восстанавливаем GUIDs из MMKV по ключу страны.
             if (storedVersion == desiredVersion) {
-                val map = SERVERS.keys.mapNotNull { country ->
+                val map = activeServers.keys.mapNotNull { country ->
                     val g = MmkvManager.decodeSettingsString("luna_guid_$country")
                     if (!g.isNullOrEmpty() && MmkvManager.decodeServerConfig(g) != null) country to g
                     else null
                 }.toMap()
-                if (map.size == SERVERS.size) {
+                if (map.size == activeServers.size) {
                     guidMap = map
                     return
                 }
             }
 
-            // Медленный путь: удаляем ранее сохранённые серверы по их GUID-ам и перезаливаем.
-            SERVERS.keys.forEach { country ->
+            activeServers.keys.forEach { country ->
                 val oldGuid = MmkvManager.decodeSettingsString("luna_guid_$country")
                 if (!oldGuid.isNullOrEmpty() && MmkvManager.decodeServerConfig(oldGuid) != null) {
                     MmkvManager.removeServer(oldGuid)
@@ -190,11 +244,10 @@ class LunaActivity : AppCompatActivity() {
         }
     }
 
-    /** Импортирует все VLESS серверы, сохраняет GUID по ключу страны в MMKV и возвращает карту. */
     private fun importDefaultServer(): Map<String, String> {
         val map = mutableMapOf<String, String>()
         try {
-            SERVERS.forEach { (country, link) ->
+            activeServers.forEach { (country, link) ->
                 val before = MmkvManager.decodeServerList("").toSet()
                 AngConfigManager.importBatchConfig(link, "", true)
                 val newGuid = MmkvManager.decodeServerList("").firstOrNull { it !in before }
@@ -232,9 +285,8 @@ class LunaActivity : AppCompatActivity() {
         return guidMap.values.firstOrNull() ?: MmkvManager.decodeServerList("").firstOrNull()
     }
 
-    /** true если guid — один из наших серверов (сверка по сохранённым GUID-ам в MMKV). */
     private fun isOurServer(guid: String): Boolean {
-        return SERVERS.keys.any { country ->
+        return activeServers.keys.any { country ->
             MmkvManager.decodeSettingsString("luna_guid_$country") == guid
         }
     }
@@ -321,7 +373,7 @@ class LunaActivity : AppCompatActivity() {
     /** Измерение пинга до сервера */
     private fun measurePing(country: String) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val host = PING_HOSTS[country] ?: return@launch
+            val host = activePingHosts[country] ?: return@launch
             val ping = try {
                 val startTime = System.currentTimeMillis()
                 java.net.Socket().use { socket ->

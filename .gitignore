@@ -44,6 +44,7 @@ Thumbs.db
 keystore.properties
 .env
 .env.local
+.env.server
 
 # Apex backend runtime data (profiles/orders)
 apex-data/
