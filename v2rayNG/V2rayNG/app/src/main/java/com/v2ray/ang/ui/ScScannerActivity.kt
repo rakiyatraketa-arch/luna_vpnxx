@@ -26,7 +26,7 @@ class ScScannerActivity : HelperBaseActivity() {
                     toastError(R.string.toast_failure)
                 }
 
-                startActivity(Intent(this, MainActivity::class.java))
+                startActivity(Intent(this, LunaActivity::class.java))
             }
             finish()
         }

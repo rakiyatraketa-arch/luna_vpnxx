@@ -52,7 +52,7 @@ class UrlSchemeActivity : BaseActivity() {
                 }
             }
 
-            startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, LunaActivity::class.java))
             finish()
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Error processing URL scheme", e)
