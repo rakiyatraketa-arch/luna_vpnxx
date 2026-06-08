@@ -298,8 +298,8 @@ class LunaActivity : AppCompatActivity() {
         // системный VPN-диалог и старт сервиса.
         lifecycleScope.launch {
             val guid = withContext(Dispatchers.IO) {
-                // geo-файлы (идемпотентно, дёшево если уже скопированы) + готовность карты серверов.
-                SettingsManager.initAssets(this@LunaActivity, this@LunaActivity.assets)
+                // initAssets не нужен здесь повторно — уже вызван при onCreate в фоне.
+                // При пустой карте серверов восстановить её (редкий кейс первого запуска).
                 if (guidMap.isEmpty()) ensureServers()
 
                 var g = guidFor(country)

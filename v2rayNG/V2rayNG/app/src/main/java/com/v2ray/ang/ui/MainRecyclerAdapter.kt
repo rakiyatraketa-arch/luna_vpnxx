@@ -35,9 +35,12 @@ class MainRecyclerAdapter(
 
     private val doubleColumnDisplay = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)
     private var data: MutableList<ServersCache> = mutableListOf()
+    // Кэшируем selectedGuid: он меняется редко, но читается при отрисовке каждой ячейки.
+    private var cachedSelectedGuid: String? = MmkvManager.getSelectServer()
 
     @SuppressLint("NotifyDataSetChanged")
     fun setData(newData: MutableList<ServersCache>?, position: Int = -1) {
+        cachedSelectedGuid = MmkvManager.getSelectServer()
         data = newData?.toMutableList() ?: mutableListOf()
 
         if (position >= 0 && position in data.indices) {
@@ -72,7 +75,7 @@ class MainRecyclerAdapter(
             }
 
             //layoutIndicator
-            if (guid == MmkvManager.getSelectServer()) {
+            if (guid == cachedSelectedGuid) {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.color.colorIndicator)
             } else {
                 holder.itemMainBinding.layoutIndicator.setBackgroundResource(0)
@@ -177,6 +180,7 @@ class MainRecyclerAdapter(
     }
 
     fun setSelectServer(fromPosition: Int, toPosition: Int) {
+        cachedSelectedGuid = MmkvManager.getSelectServer()
         notifyItemChanged(fromPosition)
         notifyItemChanged(toPosition)
     }

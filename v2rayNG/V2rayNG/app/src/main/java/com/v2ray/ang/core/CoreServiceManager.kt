@@ -33,6 +33,7 @@ import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import libv2ray.ProcessFinder
@@ -71,12 +72,15 @@ object CoreServiceManager {
             context.toast(R.string.app_tile_first_use)
             return false
         }
-        try {
-            startContextService(context)
-        } catch (e: Exception) {
-            LogUtil.e(AppConfig.TAG, "StartCore-Manager: ${e.message}", e)
-            context.toast(e.message ?: e.javaClass.simpleName)
-            return false
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                startContextService(context)
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "StartCore-Manager: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    context.toast(e.message ?: e.javaClass.simpleName)
+                }
+            }
         }
         return true
     }
@@ -93,11 +97,17 @@ object CoreServiceManager {
             MmkvManager.setSelectServer(guid)
         }
 
-        try {
-            startContextService(context)
-        } catch (e: Exception) {
-            LogUtil.e(AppConfig.TAG, "StartCore-Manager: ${e.message}", e)
-            context.toast(e.message ?: e.javaClass.simpleName)
+        // IO-валидация и startForegroundService уносятся с UI-потока чтобы избежать фриза.
+        // startForegroundService() безопасно вызывается из фонового потока.
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                startContextService(context)
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "StartCore-Manager: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    context.toast(e.message ?: e.javaClass.simpleName)
+                }
+            }
         }
     }
 
@@ -163,10 +173,13 @@ object CoreServiceManager {
 //        val result = V2rayConfigUtil.getV2rayConfig(context, guid)
 //        if (!result.status) error(result.errorMessage.ifBlank { "Failed to get V2Ray config" })
 
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING)) {
-            context.toast(R.string.toast_warning_pref_proxysharing_short)
-        } else {
-            context.toast(R.string.toast_services_start)
+        val isProxySharing = MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING)
+        CoroutineScope(Dispatchers.Main).launch {
+            if (isProxySharing) {
+                context.toast(R.string.toast_warning_pref_proxysharing_short)
+            } else {
+                context.toast(R.string.toast_services_start)
+            }
         }
 
         val isVpnMode = SettingsManager.isVpnMode()
