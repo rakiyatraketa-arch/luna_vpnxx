@@ -93,7 +93,7 @@
         .app-container { position: relative; z-index: 1; width: 100vw; max-width: 440px; height: 100vh; height: 100dvh; background: var(--phone-bg); overflow: hidden; display: flex; flex-direction: column; transition: background var(--transition), padding var(--transition); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
         @media (min-width: 441px) { .app-container { height: 92vh; height: 92dvh; border-radius: 40px; box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.04); } }
         .custom-logo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-        .status-bar { padding: 16px 24px 8px; display: flex; justify-content: center; align-items: center; z-index: 5; position: relative; }
+        .status-bar { padding: 28px 24px 8px; display: flex; justify-content: center; align-items: center; z-index: 5; position: relative; }
         .status-bar .time { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.5px; transition: color var(--transition); font-variant-numeric: tabular-nums; }
         .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 24px 24px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 16px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; position: relative; z-index: 2; }
         .app-content::-webkit-scrollbar { width: 0; }
@@ -106,34 +106,70 @@
         .icon-btn:active { transform: scale(0.9); background: var(--border); }
         .splash-screen { position: absolute; inset: 0; z-index: 100; background: var(--splash-bg); display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.4s ease, visibility 0.4s ease, background var(--transition); pointer-events: all; }
         .splash-screen.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
-        .splash-content { display: flex; flex-direction: column; align-items: center; gap: 18px; position: relative; width: 100%; animation: splashIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
-        .splash-logo-wrap { position: relative; display: flex; align-items: center; justify-content: center; padding: 9px; }
-        /* Вращающийся градиентный ореол-«комета» вокруг логотипа — индикатор загрузки */
-        .splash-logo-wrap::before {
-            content: ''; position: absolute; inset: 0; border-radius: 36px;
-            background: conic-gradient(from 0deg, transparent 0deg, transparent 200deg, #2a5298 320deg, #6b8cce 350deg, transparent 360deg);
-            animation: splashSpin 1.2s linear infinite; filter: blur(3px); z-index: 0; will-change: transform;
+        .splash-content { display: flex; flex-direction: column; align-items: center; gap: 28px; position: relative; width: 100%; animation: splashIn 0.5s ease both; }
+        .splash-title { font-size: 22px; font-weight: 700; color: var(--splash-text); letter-spacing: -0.5px; opacity: 0; animation: splashTitleIn 0.4s ease 0.3s both; transition: color var(--transition); }
+        @keyframes splashIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        @keyframes splashTitleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== Loader (uiverse) ===== */
+        .loader-container {
+            position: relative;
+            border-radius: 50%;
+            height: 96px;
+            width: 96px;
+            animation: loader_rotate 1.2s linear infinite;
+            background-color: #2a5298;
+            background-image: linear-gradient(#ffffff, #6b8cce, #2a5298);
+            flex-shrink: 0;
         }
-        .splash-logo { width: 96px; height: 96px; background: #ffffff; border-radius: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); position: relative; z-index: 2; overflow: hidden; border: 1px solid var(--border); animation: splashPulse 2s ease-in-out infinite; will-change: transform; }
-        [data-theme="dark"] .splash-logo { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .splash-title { font-size: 26px; font-weight: 700; color: var(--splash-text); letter-spacing: -0.6px; position: relative; z-index: 2; transition: color var(--transition); }
-        .splash-dots { display: flex; gap: 7px; margin-top: 2px; }
-        .splash-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: 0.3; animation: splashDot 1.1s ease-in-out infinite; will-change: transform, opacity; }
-        .splash-dots span:nth-child(2) { animation-delay: 0.18s; }
-        .splash-dots span:nth-child(3) { animation-delay: 0.36s; }
-        @keyframes splashSpin { to { transform: rotate(360deg); } }
-        @keyframes splashPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.045); } }
-        @keyframes splashDot { 0%,100% { opacity: 0.3; transform: translateY(0) scale(0.85); } 40% { opacity: 1; transform: translateY(-5px) scale(1); } }
-        @keyframes splashIn { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .loader-container span {
+            position: absolute;
+            border-radius: 50%;
+            height: 100%;
+            width: 100%;
+            background-color: #2a5298;
+            background-image: linear-gradient(#ffffff, #6b8cce, #2a5298);
+        }
+        .loader-container span:nth-of-type(1) { filter: blur(5px); }
+        .loader-container span:nth-of-type(2) { filter: blur(10px); }
+        .loader-container span:nth-of-type(3) { filter: blur(25px); }
+        .loader-container span:nth-of-type(4) { filter: blur(50px); }
+        .loader-container::after {
+            content: '';
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            background-color: var(--splash-bg);
+            border: solid 5px var(--splash-bg);
+            border-radius: 50%;
+            transition: background-color var(--transition), border-color var(--transition);
+            z-index: 2;
+        }
+        .loader-logo {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 52px; height: 52px;
+            object-fit: contain;
+            z-index: 3;
+            border-radius: 8px;
+            animation: loader_counter 1.2s linear infinite;
+            will-change: transform;
+        }
+        @keyframes loader_rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes loader_counter { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(-360deg); } }
         .orb-container { position: relative; display: flex; align-items: center; justify-content: center; height: 260px; margin: auto 0; flex-shrink: 0; }
-        .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; animation: particleFloat var(--dur) ease-in-out infinite; animation-delay: var(--delay); opacity: 0; will-change: transform, opacity; transform: translateZ(0); }
-        .particle:nth-child(1) { width: 6px; height: 6px; background: #2a5298; --dur: 3.5s; --delay: 0s; top: 20%; left: 15%; --tx: 15px; --ty: -25px; }
-        .particle:nth-child(2) { width: 4px; height: 4px; background: #6366f1; --dur: 4s; --delay: 0.8s; top: 25%; right: 18%; --tx: -12px; --ty: -22px; }
-        .particle:nth-child(3) { width: 5px; height: 5px; background: #6b8cce; --dur: 3.8s; --delay: 1.6s; bottom: 22%; left: 22%; --tx: 10px; --ty: -18px; }
-        .particle:nth-child(4) { width: 3px; height: 3px; background: #60a5fa; --dur: 4.2s; --delay: 2.2s; bottom: 20%; right: 20%; --tx: -14px; --ty: -20px; }
-        .particle:nth-child(5) { width: 5px; height: 5px; background: #a5b4fc; --dur: 3.3s; --delay: 0.4s; top: 40%; left: 8%; --tx: 8px; --ty: -28px; }
-        .particle:nth-child(6) { width: 4px; height: 4px; background: #2a5298; --dur: 4.5s; --delay: 3s; top: 35%; right: 10%; --tx: -10px; --ty: -15px; }
-        @keyframes particleFloat { 0%, 100% { opacity: 0; transform: translate(0, 0) scale(0.5); } 15% { opacity: 0.7; } 30% { opacity: 0.9; transform: translate(var(--tx, 8px), var(--ty, -20px)) scale(1.3); } 60% { opacity: 0.4; transform: translate(calc(var(--tx, 8px) * -0.5), calc(var(--ty, -20px) * -1.5)) scale(0.8); } 85% { opacity: 0.1; } }
+        .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; opacity: 0; will-change: transform, opacity; }
+        .particle:nth-child(1) { width: 5px; height: 5px; background: #2a5298; top: 20%; left: 15%; animation: pf1 3.5s ease-in-out infinite 0s; }
+        .particle:nth-child(2) { width: 4px; height: 4px; background: #6b8cce; top: 25%; right: 18%; animation: pf2 4s ease-in-out infinite 0.8s; }
+        .particle:nth-child(3) { width: 5px; height: 5px; background: #6b8cce; bottom: 22%; left: 22%; animation: pf3 3.8s ease-in-out infinite 1.6s; }
+        .particle:nth-child(4) { width: 3px; height: 3px; background: #60a5fa; bottom: 20%; right: 20%; animation: pf4 4.2s ease-in-out infinite 2.2s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; background: #2a5298; top: 40%; left: 8%; animation: pf5 3.3s ease-in-out infinite 0.4s; }
+        .particle:nth-child(6) { width: 4px; height: 4px; background: #2a5298; top: 35%; right: 10%; animation: pf6 4.5s ease-in-out infinite 3s; }
+        @keyframes pf1 { 0%,100%{opacity:0;transform:translate3d(0,0,0)} 25%{opacity:0.7;transform:translate3d(12px,-20px,0)} 75%{opacity:0;transform:translate3d(14px,-24px,0)} }
+        @keyframes pf2 { 0%,100%{opacity:0;transform:translate3d(0,0,0)} 25%{opacity:0.6;transform:translate3d(-10px,-18px,0)} 75%{opacity:0;transform:translate3d(-12px,-22px,0)} }
+        @keyframes pf3 { 0%,100%{opacity:0;transform:translate3d(0,0,0)} 25%{opacity:0.7;transform:translate3d(8px,-16px,0)} 75%{opacity:0;transform:translate3d(10px,-20px,0)} }
+        @keyframes pf4 { 0%,100%{opacity:0;transform:translate3d(0,0,0)} 25%{opacity:0.5;transform:translate3d(-11px,-17px,0)} 75%{opacity:0;transform:translate3d(-13px,-20px,0)} }
+        @keyframes pf5 { 0%,100%{opacity:0;transform:translate3d(0,0,0)} 25%{opacity:0.7;transform:translate3d(6px,-22px,0)} 75%{opacity:0;transform:translate3d(8px,-26px,0)} }
+        @keyframes pf6 { 0%,100%{opacity:0;transform:translate3d(0,0,0)} 25%{opacity:0.6;transform:translate3d(-8px,-13px,0)} 75%{opacity:0;transform:translate3d(-10px,-16px,0)} }
         .liquid-glass-orb { position: relative; z-index: 1; width: 190px; height: 190px; border-radius: 50%; background: var(--orb-bg); border: 1.5px solid var(--orb-border); box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -2px 8px rgba(0, 0, 0, 0.03), 0 0 0 8px rgba(255, 255, 255, 0.05), 0 0 0 20px rgba(255, 255, 255, 0.03), 0 0 0 36px rgba(255, 255, 255, 0.01); display: flex; align-items: center; justify-content: center; transition: transform var(--transition-slow), border-color var(--transition-slow); animation: orbFloat 6s ease-in-out infinite; cursor: default; will-change: transform; transform: translateZ(0); backface-visibility: hidden; }
         .liquid-glass-orb::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg, rgba(30, 60, 114, 0.15) 40deg, rgba(42, 82, 152, 0.1) 80deg, transparent 120deg, rgba(107, 140, 206, 0.12) 170deg, transparent 210deg, rgba(42, 82, 152, 0.08) 260deg, transparent 300deg, rgba(30, 60, 114, 0.1) 340deg, transparent 360deg); z-index: -1; animation: liquidSpin 8s linear infinite; filter: blur(8px); opacity: 0.7; will-change: transform; transform: translateZ(0); backface-visibility: hidden; }
         .liquid-glass-orb::after { content: ''; position: absolute; inset: 15%; border-radius: 50%; background: radial-gradient(ellipse at 35% 30%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 60%); pointer-events: none; animation: lightShift 5s ease-in-out infinite; will-change: transform, opacity; transform: translateZ(0); }
@@ -144,16 +180,8 @@
         .liquid-glass-orb.connected { animation: orbFloat 6s ease-in-out infinite, orbPulseConnected 2s ease-in-out infinite; border-color: rgba(52, 211, 153, 0.6); box-shadow: 0 8px 40px rgba(16, 185, 129, 0.18), 0 2px 8px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 8px rgba(16, 185, 129, 0.06), 0 0 0 8px rgba(16, 185, 129, 0.1), 0 0 0 20px rgba(16, 185, 129, 0.05), 0 0 0 36px rgba(16, 185, 129, 0.02), 0 0 60px rgba(16, 185, 129, 0.12); }
         @keyframes orbPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
         @keyframes orbPulseConnected { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
-        .connect-btn { position: relative; z-index: 2; width: 88px; height: 88px; border-radius: 50%; border: none; background: var(--btn-bg); color: var(--btn-text); font-size: 15px; font-weight: 700; letter-spacing: -0.3px; cursor: pointer; transition: transform var(--transition-bounce), color var(--transition), background var(--transition); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); display: flex; align-items: center; justify-content: center; text-transform: uppercase; overflow: hidden; font-family: inherit; }
-        .connect-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.25); }
-        .connect-btn.connecting-state { background: rgba(59, 130, 246, 0.2); color: #fff; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3); }
-        .connect-btn.connected-state { background: rgba(16, 185, 129, 0.25); color: #10b981; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3); animation: btnBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        [data-theme="dark"] .connect-btn.connected-state { color: #34d399; }
         .connect-btn .btn-text { position: relative; z-index: 1; transition: all 0.2s ease; }
-        .connect-btn .spinner { display: none; width: 24px; height: 24px; border: 2.5px solid rgba(0, 0, 0, 0.2); border-top-color: var(--btn-text); border-radius: 50%; animation: spin 0.7s linear infinite; position: absolute; }
-        .connect-btn.connecting-state .spinner { display: block; border-color: rgba(255, 255, 255, 0.3); border-top-color: #fff; }
         .connect-btn.connecting-state .btn-text { opacity: 0; }
-        .connect-btn.connected-state .btn-text { font-size: 14px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes btnBounceIn { 0% { transform: scale(0.7); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
         .connection-info { text-align: center; min-height: 54px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -227,7 +255,6 @@
             -webkit-backface-visibility: hidden;
             will-change: transform;
         }
-        .particle,
         .liquid-glass-orb::after {
             will-change: transform, opacity;
         }
@@ -389,20 +416,195 @@
         .adm-textarea:focus { border-color: #6b8cce; }
         .adm-row { display: flex; gap: 8px; margin-top: 8px; }
         .adm-btn-sm { background: #374151; color: #f9fafb; border: none; border-radius: 10px; padding: 11px 18px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+
+        /* ===== УЛУЧШЕННЫЙ SPLASH LOADER ===== */
+
+        /* ===== КНОПКА CONNECT — ПОЛНЫЙ РЕДИЗАЙН ===== */
+
+        .connect-btn {
+            position: relative;
+            z-index: 2;
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, rgba(255,255,255,0.75) 0%, rgba(235,243,255,0.55) 100%);
+            color: #2a5298;
+            cursor: pointer;
+            transition: transform var(--transition-bounce), box-shadow var(--transition), background var(--transition);
+            box-shadow:
+                0 4px 16px rgba(42,82,152,0.18),
+                0 1px 4px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.9),
+                inset 0 -1px 4px rgba(42,82,152,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: inherit;
+        }
+        [data-theme="dark"] .connect-btn {
+            background: linear-gradient(145deg, rgba(40,55,80,0.85) 0%, rgba(25,38,62,0.7) 100%);
+            color: #93c5fd;
+            box-shadow:
+                0 4px 20px rgba(107,140,206,0.25),
+                0 1px 4px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.1),
+                inset 0 -1px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Два пульсирующих кольца вокруг кнопки */
+        .connect-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(42,82,152,0.35);
+            pointer-events: none;
+            opacity: 0;
+        }
+        .connect-ring--1 {
+            inset: -8px;
+            animation: connectRingPulse 2.4s ease-out infinite 0s;
+        }
+        .connect-ring--2 {
+            inset: -16px;
+            animation: connectRingPulse 2.4s ease-out infinite 0.8s;
+        }
+        @keyframes connectRingPulse {
+            0%   { opacity: 0.7; transform: scale(0.88); }
+            70%  { opacity: 0;   transform: scale(1.15); }
+            100% { opacity: 0;   transform: scale(1.15); }
+        }
+        [data-theme="dark"] .connect-ring {
+            border-color: rgba(107,140,206,0.4);
+        }
+
+        /* Shimmer-блик */
+        .connect-shimmer {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(125deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%);
+            background-size: 200% 200%;
+            animation: connectShimmer 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes connectShimmer {
+            0%,100% { background-position: 150% 150%; opacity: 0; }
+            40%      { background-position: 50% 50%;  opacity: 1; }
+            60%      { background-position: -50% -50%; opacity: 0; }
+        }
+
+        /* SVG иконка питания */
+        .power-icon {
+            width: 30px;
+            height: 30px;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity var(--transition);
+            filter: drop-shadow(0 1px 3px rgba(42,82,152,0.3));
+            stroke: currentColor;
+        }
+
+        .connect-btn:active { transform: scale(0.88); }
+        .connect-btn:active .connect-ring { animation: none; opacity: 0; }
+
+        /* --- Состояние Connecting --- */
+        .connect-btn.connecting-state {
+            background: linear-gradient(145deg, rgba(59,130,246,0.25) 0%, rgba(37,99,235,0.15) 100%);
+            color: #3b82f6;
+            box-shadow:
+                0 4px 24px rgba(59,130,246,0.35),
+                0 0 0 1px rgba(59,130,246,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .connect-btn.connecting-state .connect-ring {
+            border-color: rgba(59,130,246,0.45);
+        }
+        .connect-btn.connecting-state .btn-text { opacity: 0; }
+
+        /* --- Состояние Connected --- */
+        .connect-btn.connected-state {
+            background: linear-gradient(145deg, rgba(16,185,129,0.28) 0%, rgba(5,150,105,0.18) 100%);
+            color: #10b981;
+            box-shadow:
+                0 4px 24px rgba(16,185,129,0.35),
+                0 0 0 1px rgba(16,185,129,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+            animation: btnBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .connect-btn.connected-state .power-icon {
+            stroke: #10b981;
+            filter: drop-shadow(0 0 6px rgba(16,185,129,0.7));
+            animation: powerIconGlow 2s ease-in-out infinite;
+        }
+        .connect-btn.connected-state .connect-ring {
+            border-color: rgba(16,185,129,0.45);
+        }
+        [data-theme="dark"] .connect-btn.connected-state { color: #34d399; }
+        [data-theme="dark"] .connect-btn.connected-state .power-icon { stroke: #34d399; filter: drop-shadow(0 0 8px rgba(52,211,153,0.7)); }
+
+        @keyframes powerIconGlow {
+            0%,100% { filter: drop-shadow(0 0 4px rgba(16,185,129,0.5)); transform: scale(1); }
+            50%      { filter: drop-shadow(0 0 10px rgba(16,185,129,0.9)); transform: scale(1.06); }
+        }
+
+        /* Spinner улучшенный */
+        .connect-btn .spinner {
+            display: none;
+            width: 26px;
+            height: 26px;
+            border: 2.5px solid rgba(59,130,246,0.2);
+            border-top-color: #3b82f6;
+            border-right-color: rgba(59,130,246,0.6);
+            border-radius: 50%;
+            animation: spinnerDual 0.7s linear infinite;
+            position: absolute;
+            z-index: 2;
+            filter: drop-shadow(0 0 4px rgba(59,130,246,0.5));
+        }
+        .connect-btn.connecting-state .spinner { display: block; }
+        @keyframes spinnerDual { to { transform: rotate(360deg); } }
+
+        /* Ripple при нажатии */
+        .connect-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(42,82,152,0.15);
+            transform: scale(0);
+            opacity: 1;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            pointer-events: none;
+        }
+        .connect-btn:active::after {
+            transform: scale(1.5);
+            opacity: 0;
+            transition: none;
+        }
+
+        /* Отключаем доп. кольца в low-power */
+        .low-power .connect-ring,
+        .low-power .connect-shimmer {
+            animation: none !important;
+            opacity: 0 !important;
+        }
     </style>
 </head>
 <body>
 
     <div class="app-container splash-active" id="appContainer">
-        <div class="status-bar"><div class="time" id="clock">--:--</div></div>
 
         <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
-                <div class="splash-logo-wrap">
-                    <div class="splash-logo"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
+                <div class="loader-container">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <img src="newlogo.png" class="loader-logo" alt="Apex VPN">
                 </div>
                 <div class="splash-title">Apex VPN</div>
-                <div class="splash-dots"><span></span><span></span><span></span></div>
             </div>
         </div>
 
@@ -429,6 +631,7 @@
             </div>
         </div>
 
+        <div class="status-bar"></div>
         <div class="app-content">
             <div class="app-header">
                 <div class="app-logo">
@@ -447,8 +650,16 @@
                 <div class="particle"></div><div class="particle"></div><div class="particle"></div>
                 <div class="liquid-glass-orb" id="vpnOrb">
                     <button class="connect-btn" id="connectBtn">
+                        <span class="connect-ring connect-ring--1"></span>
+                        <span class="connect-ring connect-ring--2"></span>
+                        <span class="connect-shimmer"></span>
                         <span class="spinner"></span>
-                        <span class="btn-text">Start</span>
+                        <span class="btn-text">
+                            <svg class="power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/>
+                                <line x1="12" y1="2" x2="12" y2="12"/>
+                            </svg>
+                        </span>
                     </button>
                 </div>
             </div>
