@@ -378,7 +378,7 @@
         /* ===== Экран входа / регистрации (обязательный) ===== */
         .auth-screen { position: absolute; inset: 0; z-index: 95; background: var(--phone-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 26px calc(32px + env(safe-area-inset-bottom,0px)); gap: 18px; opacity: 1; transition: opacity 0.35s ease, visibility 0.35s ease; overflow-y: auto; }
         .auth-screen.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
-        .auth-logo { width: 80px; height: 80px; background: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; }
+        .auth-logo { width: 80px; height: 80px; background: var(--splash-bg); border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; transition: background var(--transition); }
         .auth-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
         .auth-sub { font-size: 13px; color: var(--text-tertiary); text-align: center; margin-top: -10px; }
         .auth-tabs { display: flex; width: 100%; max-width: 340px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 4px; gap: 4px; }
@@ -392,6 +392,10 @@
         .auth-pass-wrap .auth-input { padding-right: 48px; }
         .pass-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; display: flex; align-items: center; justify-content: center; transition: color var(--transition); -webkit-tap-highlight-color: transparent; }
         .pass-toggle:active { color: var(--text-secondary); }
+        /* Скрываем нативную кнопку показа пароля от браузера/WebView */
+        #authPassword::-ms-reveal,
+        #authPassword::-ms-clear { display: none; }
+        #authPassword::-webkit-credentials-auto-fill-button { display: none !important; }
         .auth-input:focus { border-color: var(--accent); }
         .auth-input::placeholder { color: var(--text-tertiary); font-weight: 500; }
         .auth-submit { margin-top: 4px; background: linear-gradient(105deg, var(--accent), #2a5298); color: #fff; border: none; border-radius: 14px; padding: 15px 0; font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer; transition: transform var(--transition), opacity var(--transition); }
