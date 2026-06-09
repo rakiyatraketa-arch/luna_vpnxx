@@ -83,14 +83,14 @@
             display: flex; align-items: center; justify-content: center;
             -webkit-tap-highlight-color: transparent;
             user-select: none; -webkit-user-select: none;
-            overflow: hidden; transition: background var(--transition);
+            overflow: hidden;
         }
         [data-theme="dark"] body { background: linear-gradient(135deg, #070a13 0%, #0f1424 50%, #0b0f19 100%); }
         body::before { content: ''; position: fixed; top: -40%; left: -20%; width: 80%; height: 80%; background: radial-gradient(ellipse, rgba(59, 130, 246, 0.04) 0%, transparent 70%); pointer-events: none; z-index: 0; animation: bgBlob1 20s ease-in-out infinite; will-change: transform; transform: translateZ(0); }
         body::after { content: ''; position: fixed; bottom: -35%; right: -15%; width: 70%; height: 70%; background: radial-gradient(ellipse, rgba(16, 185, 129, 0.03) 0%, transparent 70%); pointer-events: none; z-index: 0; animation: bgBlob2 18s ease-in-out infinite; will-change: transform; transform: translateZ(0); }
         @keyframes bgBlob1 { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(8%, -5%) scale(1.08); } 50% { transform: translate(-3%, 3%) scale(0.94); } 75% { transform: translate(5%, 6%) scale(1.05); } }
         @keyframes bgBlob2 { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(-6%, -4%) scale(1.1); } 66% { transform: translate(4%, -2%) scale(0.92); } }
-        .app-container { position: relative; z-index: 1; width: 100vw; max-width: 440px; height: 100vh; height: 100dvh; background: var(--phone-bg); overflow: hidden; display: flex; flex-direction: column; transition: background var(--transition), padding var(--transition); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .app-container { position: relative; z-index: 1; width: 100vw; max-width: 440px; height: 100vh; height: 100dvh; background: var(--phone-bg); overflow: hidden; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
         @media (min-width: 441px) { .app-container { height: 92vh; height: 92dvh; border-radius: 40px; box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0, 0, 0, 0.04); } }
         .custom-logo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
         .status-bar { padding: 28px 24px 8px; display: flex; justify-content: center; align-items: center; z-index: 5; position: relative; }
@@ -388,6 +388,10 @@
         .auth-field { display: flex; flex-direction: column; gap: 6px; }
         .auth-field label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.4px; padding-left: 4px; }
         .auth-input { width: 100%; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text); outline: none; transition: border-color var(--transition); }
+        .auth-pass-wrap { position: relative; }
+        .auth-pass-wrap .auth-input { padding-right: 48px; }
+        .pass-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; display: flex; align-items: center; justify-content: center; transition: color var(--transition); -webkit-tap-highlight-color: transparent; }
+        .pass-toggle:active { color: var(--text-secondary); }
         .auth-input:focus { border-color: var(--accent); }
         .auth-input::placeholder { color: var(--text-tertiary); font-weight: 500; }
         .auth-submit { margin-top: 4px; background: linear-gradient(105deg, var(--accent), #2a5298); color: #fff; border: none; border-radius: 14px; padding: 15px 0; font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer; transition: transform var(--transition), opacity var(--transition); }
@@ -431,6 +435,11 @@
         .adm-textarea:focus { border-color: #6b8cce; }
         .adm-row { display: flex; gap: 8px; margin-top: 8px; }
         .adm-btn-sm { background: #374151; color: #f9fafb; border: none; border-radius: 10px; padding: 11px 18px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+
+        /* Мгновенное переключение темы — без transition (градиент body нельзя compositor-ить) */
+        .no-transition *, .no-transition *::before, .no-transition *::after {
+            transition-duration: 0s !important;
+        }
 
         /* ===== УЛУЧШЕННЫЙ SPLASH LOADER ===== */
 
@@ -638,7 +647,13 @@
                 </div>
                 <div class="auth-field">
                     <label>Пароль</label>
-                    <input class="auth-input" id="authPassword" type="password" autocomplete="current-password" placeholder="минимум 6 символов">
+                    <div class="auth-pass-wrap">
+                        <input class="auth-input" id="authPassword" type="password" autocomplete="current-password" placeholder="минимум 6 символов">
+                        <button type="button" class="pass-toggle" id="passToggle" tabindex="-1">
+                            <svg id="eyeIconOpen" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg id="eyeIconClosed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="auth-error" id="authError"></div>
                 <button class="auth-submit" id="authSubmit">Войти</button>
@@ -722,7 +737,6 @@
                     <div class="balance-value" id="balanceValue">— <span>₽</span></div>
                     <button class="balance-topup" id="btnTopup">Пополнить баланс</button>
                 </div>
-                <div class="pay-hint">Пополняйте баланс на любую сумму через СБП или картой, затем оплачивайте тарифы с баланса на вкладке «Тарифы».</div>
                 <button class="logout-btn" id="btnLogout">Выйти из аккаунта</button>
             </div>
 
@@ -1079,9 +1093,11 @@
         });
 
         function setTheme(isDark) {
+            document.documentElement.classList.add('no-transition');
             if (isDark) { document.documentElement.setAttribute('data-theme', 'dark'); toggleTheme.classList.add('active'); }
             else { document.documentElement.removeAttribute('data-theme'); toggleTheme.classList.remove('active'); }
             LS.set('luna_dark', isDark);
+            requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove('no-transition')));
         }
         setTheme(LS.get('luna_dark', false));
         document.getElementById('rowTheme').addEventListener('click', () => setTheme(!toggleTheme.classList.contains('active')));
@@ -1244,6 +1260,16 @@
         }
         authTabLogin.addEventListener('click', () => setAuthMode('login'));
         authTabRegister.addEventListener('click', () => setAuthMode('register'));
+
+        const passToggle = document.getElementById('passToggle');
+        const eyeOpen = document.getElementById('eyeIconOpen');
+        const eyeClosed = document.getElementById('eyeIconClosed');
+        passToggle.addEventListener('click', () => {
+            const show = authPassInput.type === 'password';
+            authPassInput.type = show ? 'text' : 'password';
+            eyeOpen.style.display = show ? 'none' : '';
+            eyeClosed.style.display = show ? '' : 'none';
+        });
 
         function showAuth() {
             authScreen.classList.remove('hidden');
