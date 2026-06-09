@@ -281,6 +281,21 @@
             animation: none !important;
             will-change: auto !important;
         }
+        /* Лоадер не трогаем в low-power — он показывается до входа в приложение */
+        .low-power .loader-container {
+            animation: loader_rotate 1.2s linear infinite !important;
+            will-change: transform !important;
+        }
+        .low-power .loader-logo {
+            animation: loader_counter 1.2s linear infinite !important;
+            will-change: transform !important;
+        }
+        .low-power .splash-content {
+            animation: splashIn 0.5s ease both !important;
+        }
+        .low-power .splash-title {
+            animation: splashTitleIn 0.4s ease 0.3s both !important;
+        }
 
         /* Пауза всех анимаций, когда приложение свёрнуто (на экране не видно —
            перестаём грузить GPU/CPU в фоне). Возобновляется при возврате. */
