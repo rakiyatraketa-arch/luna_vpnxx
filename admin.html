@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0d12;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ─── Login ─── */
+    #loginPage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background: #17171f;
+      border: 1px solid #262636;
+      border-radius: 18px;
+      padding: 44px 40px;
+      width: 380px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .login-logo { text-align: center; font-size: 36px; margin-bottom: 8px; }
+    .login-card h1 { text-align: center; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .login-sub { text-align: center; color: #4a5568; font-size: 13px; margin-bottom: 32px; }
+
+    /* ─── Form ─── */
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    input, textarea {
+      width: 100%;
+      background: #0d0d12;
+      border: 1.5px solid #262636;
+      border-radius: 10px;
+      color: #e2e8f0;
+      padding: 11px 14px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .18s;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus { border-color: #6366f1; }
+    textarea {
+      resize: vertical;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* ─── Buttons ─── */
+    .btn {
+      border: none; border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 600; padding: 11px 22px;
+      transition: opacity .18s, transform .1s;
+    }
+    .btn:hover { opacity: .88; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: linear-gradient(135deg,#6366f1,#818cf8); color: #fff; width: 100%; padding: 13px; }
+    .btn-danger  { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.25); padding: 7px 14px; font-size: 12px; }
+    .btn-sm      { padding: 7px 16px; font-size: 13px; background: #262636; color: #e2e8f0; }
+
+    /* ─── Alert ─── */
+    .alert {
+      border-radius: 10px;
+      font-size: 13px;
+      padding: 11px 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert-error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.25); color: #fca5a5; }
+    .alert-success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25); color: #86efac; }
+
+    /* ─── Header ─── */
+    #mainPanel { display: none; }
+    header {
+      background: #17171f;
+      border-bottom: 1px solid #1e1e28;
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; }
+    .badge-admin {
+      background: linear-gradient(135deg,#6366f1,#818cf8);
+      border-radius: 5px;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      padding: 2px 8px;
+    }
+    .btn-logout {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 8px;
+      color: #f87171;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      transition: background .18s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,.2); }
+
+    /* ─── Tabs ─── */
+    .tabs {
+      background: #17171f;
+      border-bottom: 1px solid #1e1e28;
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+    }
+    .tab-btn {
+      background: none; border: none; border-bottom: 2px solid transparent;
+      color: #4a5568; cursor: pointer; font-size: 13px; font-weight: 600;
+      padding: 14px 18px; border-radius: 0; width: auto;
+      transition: color .18s, border-color .18s;
+    }
+    .tab-btn:hover { color: #a0aec0; }
+    .tab-btn.active { color: #818cf8; border-bottom-color: #6366f1; }
+
+    /* ─── Content ─── */
+    .content { padding: 28px 28px 60px; max-width: 860px; margin: 0 auto; }
+
+    /* ─── Stats ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #17171f;
+      border: 1px solid #262636;
+      border-radius: 14px;
+      padding: 22px 20px;
+    }
+    .stat-value { font-size: 32px; font-weight: 800; color: #818cf8; }
+    .stat-label { color: #4a5568; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+
+    /* ─── Config cards ─── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: 14px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: .06em; }
+
+    .config-card {
+      background: #17171f;
+      border: 1px solid #262636;
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      transition: border-color .18s;
+    }
+    .config-card:hover { border-color: #353550; }
+    .config-info { display: flex; align-items: center; gap: 14px; }
+    .config-flag { font-size: 28px; line-height: 1; }
+    .config-name { font-size: 15px; font-weight: 700; }
+    .config-host { font-size: 12px; color: #4a5568; font-family: monospace; margin-top: 3px; }
+
+    /* ─── Add config card ─── */
+    .add-card {
+      background: #17171f;
+      border: 1px dashed #353550;
+      border-radius: 14px;
+      padding: 26px;
+      margin-top: 20px;
+    }
+    .add-card-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: #818cf8; }
+    .row-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+    /* ─── User cards ─── */
+    .user-card {
+      background: #17171f;
+      border: 1px solid #262636;
+      border-radius: 14px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .user-login { font-size: 15px; font-weight: 700; }
+    .user-id { font-size: 11px; color: #4a5568; font-family: monospace; margin-top: 2px; }
+    .user-meta { display: flex; align-items: center; gap: 12px; }
+    .user-balance { font-size: 13px; color: #a0aec0; }
+    .pill {
+      border-radius: 20px; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; letter-spacing: .04em;
+    }
+    .pill-active   { background: rgba(34,197,94,.15); color: #4ade80; }
+    .pill-inactive { background: rgba(74,85,104,.15); color: #4a5568; }
+
+    /* ─── Empty state ─── */
+    .empty { text-align: center; color: #4a5568; padding: 40px 0; font-size: 14px; }
+
+    /* ─── Toast ─── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: #22c55e; color: #fff;
+      border-radius: 10px; padding: 12px 22px;
+      font-size: 14px; font-weight: 700;
+      display: none; z-index: 9999;
+      box-shadow: 0 8px 24px rgba(34,197,94,.35);
+    }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Modal ─── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 500;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #17171f;
+      border: 1px solid #353550;
+      border-radius: 18px;
+      padding: 32px;
+      width: min(700px, 95vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(16px);
+      transition: transform .2s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: #818cf8; }
+    .btn-close {
+      background: #262636; border: none; border-radius: 8px;
+      color: #64748b; cursor: pointer; font-size: 18px; font-weight: 700;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .btn-close:hover { background: #353550; color: #e2e8f0; }
+    .btn-edit {
+      background: rgba(99,102,241,.15); color: #818cf8;
+      border: 1px solid rgba(99,102,241,.3);
+      padding: 7px 14px; font-size: 12px;
+    }
+    .config-actions { display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="login-logo">⚡</div>
+    <h1>Apex Admin</h1>
+    <p class="login-sub">Панель управления VPN</p>
+    <div id="loginAlert" class="alert alert-error"></div>
+    <div class="form-group">
+      <label>Логин администратора</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label>Пароль</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">Войти</button>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN PANEL ═══════════════ -->
+<div id="mainPanel">
+  <header>
+    <div class="header-brand">
+      <span>⚡ Apex Admin</span>
+      <span class="badge-admin">ADMIN</span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Выйти</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('configs')" id="tabBtn-configs">🔧&nbsp; Конфиги</button>
+    <button class="tab-btn" onclick="showTab('stats')" id="tabBtn-stats">📊&nbsp; Статистика</button>
+    <button class="tab-btn" onclick="showTab('users')" id="tabBtn-users">👥&nbsp; Пользователи</button>
+  </div>
+
+  <!-- ─── CONFIGS TAB ─── -->
+  <div id="tab-configs" class="content">
+    <div class="section-header">
+      <span class="section-title">VPN Конфиги</span>
+      <span id="configCountBadge" style="background:#262636;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#818cf8;">0</span>
+    </div>
+    <div id="configList"><div class="empty">Загрузка...</div></div>
+
+    <div class="add-card">
+      <div class="add-card-title">➕ Добавить новый конфиг</div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Название сервера</label>
+          <input type="text" id="newCountry" placeholder="Финляндия / LTE ОБХОД / Germany Fast" />
+        </div>
+        <div class="form-group">
+          <label>Флаг (emoji)</label>
+          <input type="text" id="newFlag" placeholder="🇫🇮" style="font-size:20px;" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Полный Xray JSON конфиг</label>
+        <textarea id="newJson" rows="14" placeholder='{
+  "dns": { "queryStrategy": "UseIP", "servers": ["1.1.1.1"] },
+  "inbounds": [...],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": { "vnext": [{ "address": "...", "port": 443, "users": [...] }] },
+      "streamSettings": { "network": "tcp", "security": "reality", "realitySettings": {...} },
+      "tag": "proxy"
+    }
+  ],
+  "routing": { "rules": [...] }
+}'></textarea>
+      </div>
+      <div id="addAlert" class="alert alert-error"></div>
+      <button class="btn btn-primary" style="width:auto;padding:11px 28px;" onclick="doAddConfig()" id="addBtn">
+        Добавить конфиг
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── STATS TAB ─── -->
+  <div id="tab-stats" class="content" style="display:none;">
+    <div class="section-title" style="margin-bottom:20px;">Статистика сервера</div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="empty">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- ─── USERS TAB ─── -->
+  <div id="tab-users" class="content" style="display:none;">
+    <div class="section-header">
+      <span class="section-title">Пользователи</span>
+      <span id="userCountBadge" style="background:#262636;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#818cf8;">0</span>
+    </div>
+    <div id="userList"><div class="empty">Загрузка...</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ EDIT MODAL ═══════════════ -->
+<div class="modal-overlay" id="editModal" onclick="closeEditModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">✏️ Редактировать конфиг</span>
+      <button class="btn-close" onclick="closeEditModal()">×</button>
+    </div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Название сервера</label>
+        <input type="text" id="editCountry" placeholder="Финляндия" />
+      </div>
+      <div class="form-group">
+        <label>Флаг (emoji)</label>
+        <input type="text" id="editFlag" placeholder="🇫🇮" style="font-size:20px;" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Xray JSON конфиг</label>
+      <textarea id="editJson" rows="16"></textarea>
+    </div>
+    <div id="editAlert" class="alert alert-error"></div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <button class="btn btn-sm" onclick="closeEditModal()">Отмена</button>
+      <button class="btn btn-primary" style="width:auto;padding:11px 28px;" onclick="doSaveEdit()" id="saveEditBtn">
+        Сохранить
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = window.location.origin;
+let token = localStorage.getItem('apexAdminToken');
+
+// ─── API helper ───
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  if (opts.headers) Object.assign(headers, opts.headers);
+  return fetch(API + path, { ...opts, headers });
+}
+
+// ─── Login ───
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const alertEl = document.getElementById('loginAlert');
+  alertEl.style.display = 'none';
+
+  if (!user || !pass) {
+    showAlert(alertEl, 'Введите логин и пароль');
+    return;
+  }
+
+  try {
+    const r = await api('/api/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ user, pass })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.token) {
+      showAlert(alertEl, 'Неверный логин или пароль');
+      return;
+    }
+    token = data.token;
+    localStorage.setItem('apexAdminToken', token);
+    enterPanel();
+  } catch (e) {
+    showAlert(alertEl, 'Ошибка соединения: ' + e.message);
+  }
+}
+
+function doLogout() {
+  token = null;
+  localStorage.removeItem('apexAdminToken');
+  document.getElementById('mainPanel').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+}
+
+function enterPanel() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainPanel').style.display = 'block';
+  loadConfigs();
+}
+
+// ─── Tabs ───
+function showTab(name) {
+  ['configs', 'stats', 'users'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+    document.getElementById('tabBtn-' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'stats') loadStats();
+  if (name === 'users') loadUsers();
+}
+
+// ─── Configs ───
+async function loadConfigs() {
+  const r = await api('/api/admin/configs');
+  if (r.status === 401) { doLogout(); return; }
+  const data = await r.json();
+  const configs = data.configs || [];
+  document.getElementById('configCountBadge').textContent = configs.length;
+
+  if (!configs.length) {
+    document.getElementById('configList').innerHTML = '<div class="empty">Конфигов нет — добавьте первый</div>';
+    return;
+  }
+
+  document.getElementById('configList').innerHTML = configs.map(c => `
+    <div class="config-card" id="cfg-${esc(c.id)}">
+      <div class="config-info">
+        <div class="config-flag">${esc(c.flag || '🌐')}</div>
+        <div>
+          <div class="config-name">${esc(c.country)}</div>
+          <div class="config-host">${esc(c.host || '—')}</div>
+        </div>
+      </div>
+      <div class="config-actions">
+        <button class="btn btn-edit" onclick='openEditModal(${JSON.stringify(c)})'>Изменить</button>
+        <button class="btn btn-danger" onclick="doDelete('${esc(c.id)}')">Удалить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function doDelete(id) {
+  if (!confirm('Удалить этот конфиг?')) return;
+  const r = await api('/api/admin/configs/' + id, { method: 'DELETE' });
+  if (r.ok) { showToast('Конфиг удалён ✓'); loadConfigs(); }
+  else { const d = await r.json(); alert('Ошибка: ' + (d.error || r.status)); }
+}
+
+async function doAddConfig() {
+  const country = document.getElementById('newCountry').value.trim();
+  const flag    = document.getElementById('newFlag').value.trim();
+  const jsonStr = document.getElementById('newJson').value.trim();
+  const alertEl = document.getElementById('addAlert');
+  alertEl.style.display = 'none';
+
+  if (!country) { showAlert(alertEl, 'Введите название сервера'); return; }
+  if (!jsonStr)  { showAlert(alertEl, 'Вставьте JSON конфиг'); return; }
+
+  // Validate JSON client-side
+  let parsed;
+  try { parsed = JSON.parse(jsonStr); }
+  catch (e) { showAlert(alertEl, 'Невалидный JSON: ' + e.message); return; }
+
+  if (!parsed.outbounds && !parsed.inbounds) {
+    showAlert(alertEl, 'JSON не похож на Xray-конфиг (нет outbounds/inbounds)');
+    return;
+  }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Добавляю...';
+
+  try {
+    const r = await api('/api/admin/configs', {
+      method: 'POST',
+      body: JSON.stringify({ country, flag: flag || '🌐', json: jsonStr })
+    });
+    const d = await r.json();
+    if (!r.ok) { showAlert(alertEl, d.error || 'Ошибка ' + r.status); return; }
+
+    document.getElementById('newCountry').value = '';
+    document.getElementById('newFlag').value = '';
+    document.getElementById('newJson').value = '';
+    showToast('Конфиг «' + country + '» добавлен ✓');
+    loadConfigs();
+  } catch (e) {
+    showAlert(alertEl, 'Ошибка: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Добавить конфиг';
+  }
+}
+
+// ─── Stats ───
+async function loadStats() {
+  const r = await api('/api/admin/stats');
+  if (!r.ok) return;
+  const s = await r.json();
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${s.totalAccounts}</div>
+      <div class="stat-label">Аккаунтов</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${s.activeSubscriptions}</div>
+      <div class="stat-label">Активных подписок</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${s.totalBalance} ₽</div>
+      <div class="stat-label">Суммарный баланс</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${s.totalConfigs}</div>
+      <div class="stat-label">VPN конфигов</div>
+    </div>
+  `;
+}
+
+// ─── Users ───
+async function loadUsers() {
+  const r = await api('/api/admin/users');
+  if (r.status === 401) { doLogout(); return; }
+  if (!r.ok) {
+    document.getElementById('userList').innerHTML = '<div class="empty">Ошибка загрузки пользователей</div>';
+    return;
+  }
+  const data = await r.json();
+  const users = data.users || [];
+  document.getElementById('userCountBadge').textContent = users.length;
+
+  if (!users.length) {
+    document.getElementById('userList').innerHTML = '<div class="empty">Пользователей нет</div>';
+    return;
+  }
+
+  const now = Date.now();
+  document.getElementById('userList').innerHTML = users.map(u => {
+    const active = u.subUntil > now;
+    const daysLeft = active ? Math.ceil((u.subUntil - now) / 86400000) : 0;
+    const sub = active
+      ? `<span class="pill pill-active">Активна ${daysLeft}д</span>`
+      : `<span class="pill pill-inactive">Нет подписки</span>`;
+    const created = new Date(u.createdAt).toLocaleDateString('ru-RU');
+    return `
+      <div class="user-card">
+        <div>
+          <div class="user-login">${esc(u.login)}</div>
+          <div class="user-id">${esc(u.userId)} · с ${created}</div>
+        </div>
+        <div class="user-meta">
+          <span class="user-balance">${u.balance} ₽</span>
+          ${sub}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Edit Modal ───
+let _editId = null;
+
+function openEditModal(cfg) {
+  _editId = cfg.id;
+  document.getElementById('editCountry').value = cfg.country || '';
+  document.getElementById('editFlag').value    = cfg.flag    || '';
+  try {
+    const pretty = JSON.stringify(JSON.parse(cfg.json), null, 2);
+    document.getElementById('editJson').value = pretty;
+  } catch (_) {
+    document.getElementById('editJson').value = cfg.json || '';
+  }
+  document.getElementById('editAlert').style.display = 'none';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal(e) {
+  if (e && e.target !== document.getElementById('editModal')) return;
+  document.getElementById('editModal').classList.remove('open');
+  _editId = null;
+}
+
+async function doSaveEdit() {
+  const country = document.getElementById('editCountry').value.trim();
+  const flag    = document.getElementById('editFlag').value.trim();
+  const jsonStr = document.getElementById('editJson').value.trim();
+  const alertEl = document.getElementById('editAlert');
+  alertEl.style.display = 'none';
+
+  if (!country) { showAlert(alertEl, 'Введите название'); return; }
+  if (!jsonStr)  { showAlert(alertEl, 'JSON не может быть пустым'); return; }
+  try { JSON.parse(jsonStr); } catch (e) { showAlert(alertEl, 'Невалидный JSON: ' + e.message); return; }
+
+  const btn = document.getElementById('saveEditBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Сохраняю...';
+
+  try {
+    const r = await api('/api/admin/configs/' + _editId, {
+      method: 'PUT',
+      body: JSON.stringify({ country, flag: flag || '🌐', json: jsonStr })
+    });
+    const d = await r.json();
+    if (!r.ok) { showAlert(alertEl, d.error || 'Ошибка ' + r.status); return; }
+    document.getElementById('editModal').classList.remove('open');
+    showToast('Конфиг «' + country + '» обновлён ✓');
+    loadConfigs();
+  } catch (e) {
+    showAlert(alertEl, 'Ошибка: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Сохранить';
+  }
+}
+
+// Close modal on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('editModal').classList.remove('open');
+});
+
+// ─── Helpers ───
+function showAlert(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.style.display = 'none'; }, 3200);
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ─── Bootstrap ───
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginPass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('loginUser').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginPass').focus();
+  });
+
+  if (token) {
+    api('/api/admin/stats').then(r => {
+      if (r.ok) enterPanel();
+      else { token = null; localStorage.removeItem('apexAdminToken'); }
+    }).catch(() => {});
+  }
+});
+</script>
+</body>
+</html>

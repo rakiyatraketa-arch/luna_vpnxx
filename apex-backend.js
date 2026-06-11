@@ -41,7 +41,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'apex-data');
 const API_KEY = process.env.AYFOPAY_API_KEY || '';
 const AYFOPAY_HOST = 'api.ayfopay.com';
-const MAX_BODY = 32 * 1024;
+const MAX_BODY = 512 * 1024;
 const ADMIN_USER = process.env.ADMIN_USER || '';
 const ADMIN_PASS = process.env.ADMIN_PASS || '';
 const ADMIN_HWID = (process.env.ADMIN_HWID || '').toUpperCase().trim();
@@ -127,6 +127,10 @@ function makeDefaultConfigs() {
         { id: crypto.randomBytes(8).toString('hex'), country: 'Швейцария', flag: '🇨🇭',
           host: 'sd.motion-vpn.com',
           json: '{"remarks":"🇨🇭 Швейцария | WI-FI","dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"sd.motion-vpn.com","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"8b671692-edc3-4417-b648-d5569546ee0c"}]}]},"streamSettings":{"network":"tcp","security":"reality","realitySettings":{"fingerprint":"firefox","publicKey":"KU9m48nhlZ2f45x5s4m9JcOQlffza1tGB2J8e_7yg1w","serverName":"sd.motion-vpn.com"}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"outboundTag":"direct","protocol":["bittorrent"],"type":"field"}]}}'
+        },
+        { id: crypto.randomBytes(8).toString('hex'), country: 'LTE ОБХОД', flag: '🇪🇺',
+          host: '158.160.86.177',
+          json: '{"dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false,"auth":"noauth"},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"log":{"loglevel":"warning"},"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"158.160.86.177","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"7fc09d49-24f8-4ccb-b86d-41fc310fac06"}]}]},"streamSettings":{"network":"tcp","realitySettings":{"fingerprint":"chrome","publicKey":"vUqDEx0U33StHVKNQz11H_FsuwVmfqwUZlRNv0zmvzY","serverName":"ads.x5.ru"},"security":"reality","tcpSettings":{}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"remarks":"🇪🇺 LTE ОБХОД","routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"ip":["geoip:private"],"outboundTag":"block","type":"field"},{"domain":["geosite:private"],"outboundTag":"block","type":"field"},{"outboundTag":"block","protocol":["bittorrent"],"type":"field"},{"network":"udp","outboundTag":"block","port":443,"type":"field"},{"domain":["geosite:meta","geosite:instagram","geosite:facebook","domain:cdninstagram.com","domain:fbcdn.net"],"outboundTag":"proxy","type":"field"},{"ip":["geoip:ru"],"outboundTag":"direct","type":"field"},{"domain":["geosite:category-ru","geosite:category-gov-ru","geosite:yandex","geosite:vk","geosite:mailru","regexp:.*\\\\.ru$","regexp:.*\\\\.xn--p1ai$","regexp:.*\\\\.su$","full:go.yandex","keyword:yandex","domain:oneme.ru","domain:max.ru","domain:tracker-api.vk-analytics.ru","domain:wechat.com","domain:weixin.qq.com","domain:wx.qq.com","domain:servicewechat.com","domain:wxqcloud.qq.com","domain:tc.qq.com","domain:qpic.cn","domain:dldir1.qq.com","domain:1cfresh.com","domain:1internet.tv","domain:2gis.com","domain:2gis.kz","domain:2gis.by","domain:2gis.ua","domain:2gis.uz","domain:avito.st","domain:baltinvestbank.com","domain:bank131.com","domain:bankstoday.net","domain:bcs-bank.com","domain:donationalerts.com","domain:edadeal.io","domain:emias.info","domain:fix-price.com","domain:gazprombank.com","domain:jivochat.com","domain:jivosite.com","domain:kari.com","domain:kaspersky.com","domain:kk.bank","domain:koronapay.com","domain:lenta.com","domain:lmru.tech","domain:megamarket.tech","domain:moex.com","domain:mycdn.me","domain:okko.tv","domain:okko.sport","domain:ozonusercontent.com","domain:qiwi.com","domain:roscosmos.bank","domain:sberbank.com","domain:sovcombank.com","domain:tamtam.chat","domain:taplink.cc","domain:tbank-online.com","domain:timeweb.com","domain:timeweb.cloud","domain:tochka.com","domain:tochka-tech.com","domain:turbopages.org","domain:unistream.com","domain:userapi.com","domain:vk.com","domain:vk.cc","domain:vk.me","domain:vk.link","domain:vk.team","domain:vk.company","domain:vkcache.com","domain:vkgo.app","domain:vklive.app","domain:vkmessenger.com","domain:vkuser.net","domain:vkuseraudio.com","domain:vkuseraudio.net","domain:vkuservideo.com","domain:vkuservideo.net","domain:vk-apps.com","domain:vk-cdn.me","domain:vk-cdn.net","domain:vk-portal.net","domain:vtb.com","domain:vtb24.com","domain:wbapi.com","domain:wbbasket.net","domain:wbstatic.net","domain:webvisor.com","domain:webvisor.org","domain:wildberries.eu","domain:x5.tech","domain:yads.tech","domain:yastat.net","domain:yastatic.net","domain:youla.io","domain:zaim.com","domain:redheadsound.studio","domain:zentotem.net"],"outboundTag":"direct","type":"field"}]}}'
         }
     ];
 }
@@ -137,6 +141,19 @@ if (!Array.isArray(vpnConfigs)) {
     saveJson('configs.json', vpnConfigs);
 }
 function persistConfigs() { saveJson('configs.json', vpnConfigs); }
+
+// Migration: add LTE ОБХОД config to existing installs
+(function migrateLteObkhod() {
+    const LTE_HOST = '158.160.86.177';
+    if (vpnConfigs.some(c => c.host === LTE_HOST || c.country === 'LTE ОБХОД')) return;
+    const lteDefaults = makeDefaultConfigs();
+    const lteCfg = lteDefaults.find(c => c.country === 'LTE ОБХОД');
+    if (lteCfg) {
+        vpnConfigs.push({ ...lteCfg, id: crypto.randomBytes(8).toString('hex') });
+        persistConfigs();
+        console.log('[apex] Migration: added LTE ОБХОД config');
+    }
+})();
 
 // ===================== Аккаунты / авторизация =====================
 
@@ -296,6 +313,23 @@ const server = http.createServer(async (req, res) => {
         const route = url.pathname;
 
         if (req.method === 'OPTIONS') return sendJson(res, 204, {});
+
+        // Root redirect → admin panel
+        if (req.method === 'GET' && route === '/') {
+            res.writeHead(302, { 'Location': '/admin' });
+            return res.end();
+        }
+
+        // Admin panel HTML
+        if (req.method === 'GET' && (route === '/admin' || route === '/admin.html')) {
+            try {
+                const html = fs.readFileSync(path.join(__dirname, 'admin.html'));
+                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                return res.end(html);
+            } catch (_) {
+                return sendJson(res, 404, { error: 'admin.html not found' });
+            }
+        }
 
         // Список тарифов
         if (req.method === 'GET' && route === '/api/plans') {
@@ -512,6 +546,23 @@ const server = http.createServer(async (req, res) => {
             });
         }
 
+        // ===== Admin: list users =====
+        if (req.method === 'GET' && route === '/api/admin/users') {
+            if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
+            const now = Date.now();
+            const users = Object.values(accounts).map(a => ({
+                login: a.login,
+                userId: a.userId,
+                balance: a.balance || 0,
+                subUntil: a.subUntil || 0,
+                active: (a.subUntil || 0) > now,
+                daysLeft: (a.subUntil || 0) > now ? Math.ceil((a.subUntil - now) / 86400000) : 0,
+                devices: (a.tokens || []).length,
+                createdAt: a.createdAt || 0,
+            })).sort((a, b) => b.createdAt - a.createdAt);
+            return sendJson(res, 200, { users, total: users.length });
+        }
+
         // ===== Admin: list configs =====
         if (req.method === 'GET' && route === '/api/admin/configs') {
             if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
@@ -531,6 +582,26 @@ const server = http.createServer(async (req, res) => {
             vpnConfigs.push(cfg);
             persistConfigs();
             console.log(`[admin] ADD config country=${cfg.country}`);
+            return sendJson(res, 200, { ok: true, config: cfg });
+        }
+
+        // ===== Admin: edit config =====
+        const cfgIdMatch = route.match(/^\/api\/admin\/configs\/([a-f0-9]+)$/);
+        if (req.method === 'PUT' && cfgIdMatch) {
+            if (!isAdminAuth(req)) return sendJson(res, 401, { error: 'unauthorized' });
+            const id = cfgIdMatch[1];
+            const cfg = vpnConfigs.find(c => c.id === id);
+            if (!cfg) return sendJson(res, 404, { error: 'not found' });
+            const data = await readJson(req);
+            if (data.country !== undefined) cfg.country = String(data.country);
+            if (data.flag    !== undefined) cfg.flag    = String(data.flag);
+            if (data.host    !== undefined) cfg.host    = String(data.host);
+            if (data.json    !== undefined) {
+                cfg.json = String(data.json);
+                try { cfg.host = JSON.parse(data.json)?.outbounds?.[0]?.settings?.vnext?.[0]?.address || cfg.host; } catch (_) {}
+            }
+            persistConfigs();
+            console.log(`[admin] EDIT config id=${id} country=${cfg.country}`);
             return sendJson(res, 200, { ok: true, config: cfg });
         }
 

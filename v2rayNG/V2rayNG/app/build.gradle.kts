@@ -36,7 +36,7 @@ android {
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val backendUrl = (project.findProperty("backendUrl") as? String) ?: "https://104-143-201-122.sslip.io:8443"
+        val backendUrl = (project.findProperty("backendUrl") as? String) ?: "https://87-58-210-202.nip.io:8443"
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
     }
 
