@@ -66,14 +66,16 @@ class LunaActivity : AppCompatActivity() {
             "Нидерланды" to NIDERLANDS_JSON,
             "Германия" to GERMANY_JSON,
             "Россия" to RUSSIA_JSON,
-            "Швейцария" to SWITZERLAND_JSON
+            "Швейцария" to SWITZERLAND_JSON,
+            "LTE ОБХОД" to """{"dns":{"queryStrategy":"UseIP","servers":["1.1.1.1","1.0.0.1"]},"inbounds":[{"listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"auth":"noauth","udp":true},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"socks"},{"listen":"127.0.0.1","port":10809,"protocol":"http","settings":{"allowTransparent":false,"auth":"noauth"},"sniffing":{"destOverride":["http","tls","quic"],"enabled":true,"routeOnly":false},"tag":"http"}],"log":{"loglevel":"warning"},"outbounds":[{"protocol":"vless","settings":{"vnext":[{"address":"158.160.86.177","port":443,"users":[{"encryption":"none","flow":"xtls-rprx-vision","id":"7fc09d49-24f8-4ccb-b86d-41fc310fac06"}]}]},"streamSettings":{"network":"tcp","realitySettings":{"fingerprint":"chrome","publicKey":"vUqDEx0U33StHVKNQz11H_FsuwVmfqwUZlRNv0zmvzY","serverName":"ads.x5.ru"},"security":"reality","tcpSettings":{}},"tag":"proxy"},{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"block"}],"remarks":"🇪🇺 LTE ОБХОД","routing":{"domainMatcher":"hybrid","domainStrategy":"IPIfNonMatch","rules":[{"ip":["geoip:private"],"outboundTag":"block","type":"field"},{"domain":["geosite:private"],"outboundTag":"block","type":"field"},{"outboundTag":"block","protocol":["bittorrent"],"type":"field"},{"network":"udp","outboundTag":"block","port":443,"type":"field"},{"ip":["geoip:ru"],"outboundTag":"direct","type":"field"},{"domain":["geosite:category-ru","geosite:category-gov-ru","geosite:yandex","geosite:vk","geosite:mailru","regexp:.*\\.ru$","regexp:.*\\.xn--p1ai$","regexp:.*\\.su$","domain:vk.com","domain:vk.cc","domain:vk.me","domain:sberbank.com","domain:vtb.com","domain:gazprombank.com","domain:tbank-online.com","domain:qiwi.com","domain:ozonusercontent.com","domain:wbstatic.net","domain:wbbasket.net","domain:wbapi.com","domain:userapi.com","domain:yastatic.net","domain:yastat.net","domain:turbopages.org","domain:mycdn.me"],"outboundTag":"direct","type":"field"}]}}"
         )
 
         private val FALLBACK_PING_HOSTS = mapOf(
             "Нидерланды" to "87.58.210.202",
             "Германия" to "de1.motion-vpn.com",
             "Россия" to "noderu2.motion-vpn.com",
-            "Швейцария" to "sd.motion-vpn.com"
+            "Швейцария" to "sd.motion-vpn.com",
+            "LTE ОБХОД" to "158.160.86.177"
         )
 
         private const val PING_PORT = 443
