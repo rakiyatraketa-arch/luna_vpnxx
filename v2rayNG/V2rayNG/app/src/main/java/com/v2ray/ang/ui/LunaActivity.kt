@@ -70,7 +70,7 @@ class LunaActivity : AppCompatActivity() {
             "Германия" to GERMANY_JSON,
             "Россия" to RUSSIA_JSON,
             "Швейцария" to SWITZERLAND_JSON,
-            "LTE ОБХОД" to LTE_JSON
+            "LTE" to LTE_JSON
         )
 
         private val FALLBACK_PING_HOSTS = mapOf(
@@ -78,7 +78,7 @@ class LunaActivity : AppCompatActivity() {
             "Германия" to "de1.motion-vpn.com",
             "Россия" to "noderu2.motion-vpn.com",
             "Швейцария" to "sd.motion-vpn.com",
-            "LTE ОБХОД" to "158.160.86.177"
+            "LTE" to "158.160.86.177"
         )
 
         private const val PING_PORT = 443
