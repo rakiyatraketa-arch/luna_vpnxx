@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -533,83 +533,140 @@
             stroke: currentColor;
         }
 
-        .connect-btn:active { transform: scale(0.88); }
+        /* Нажатие — глубокий вдавленный press с мгновенной реакцией */
+        .connect-btn:active {
+            transform: scale(0.82);
+            box-shadow:
+                0 2px 8px rgba(42,82,152,0.22),
+                0 1px 2px rgba(0,0,0,0.1),
+                inset 0 2px 8px rgba(42,82,152,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            transition: transform 0.08s cubic-bezier(0.4,0,0.2,1), box-shadow 0.08s ease;
+        }
         .connect-btn:active .connect-ring { animation: none; opacity: 0; }
+        .connect-btn:active .power-icon { transform: scale(0.9) rotate(-8deg); }
+
+        /* Tap-burst: два быстрых расширяющихся кольца при клике (JS добавляет класс) */
+        .connect-btn.tap-burst::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid rgba(42,82,152,0.6);
+            animation: tapBurst 0.45s cubic-bezier(0.2,0,0.4,1) forwards;
+            pointer-events: none;
+            z-index: 3;
+        }
+        @keyframes tapBurst {
+            0%   { opacity: 1; transform: scale(0.85); }
+            100% { opacity: 0; transform: scale(1.65); }
+        }
+
+        /* Glow-flash под кнопкой при тапе */
+        .connect-btn.tap-burst {
+            box-shadow:
+                0 0 0 0 rgba(42,82,152,0),
+                0 4px 16px rgba(42,82,152,0.18),
+                0 1px 4px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.9),
+                inset 0 -1px 4px rgba(42,82,152,0.08);
+        }
 
         /* --- Состояние Connecting --- */
         .connect-btn.connecting-state {
-            background: linear-gradient(145deg, rgba(59,130,246,0.25) 0%, rgba(37,99,235,0.15) 100%);
+            background: linear-gradient(145deg, rgba(59,130,246,0.28) 0%, rgba(37,99,235,0.18) 100%);
             color: #3b82f6;
             box-shadow:
-                0 4px 24px rgba(59,130,246,0.35),
-                0 0 0 1px rgba(59,130,246,0.2),
-                inset 0 1px 0 rgba(255,255,255,0.3);
+                0 6px 28px rgba(59,130,246,0.4),
+                0 0 0 1.5px rgba(59,130,246,0.25),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 4px rgba(59,130,246,0.1);
+            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            animation: connectingAppear 0.35s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes connectingAppear {
+            0%   { transform: scale(0.88); }
+            60%  { transform: scale(1.06); }
+            100% { transform: scale(1); }
         }
         .connect-btn.connecting-state .connect-ring {
-            border-color: rgba(59,130,246,0.45);
+            border-color: rgba(59,130,246,0.5);
+            animation: connectRingPulse 1.6s ease-out infinite;
+        }
+        .connect-btn.connecting-state .connect-ring--2 {
+            animation-delay: 0.5s;
         }
         .connect-btn.connecting-state .btn-text { opacity: 0; }
+        .connect-btn.connecting-state .power-icon { opacity: 0; }
 
         /* --- Состояние Connected --- */
         .connect-btn.connected-state {
-            background: linear-gradient(145deg, rgba(16,185,129,0.28) 0%, rgba(5,150,105,0.18) 100%);
+            background: linear-gradient(145deg, rgba(16,185,129,0.32) 0%, rgba(5,150,105,0.2) 100%);
             color: #10b981;
             box-shadow:
-                0 4px 24px rgba(16,185,129,0.35),
-                0 0 0 1px rgba(16,185,129,0.2),
-                inset 0 1px 0 rgba(255,255,255,0.3);
-            animation: btnBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+                0 6px 28px rgba(16,185,129,0.4),
+                0 0 0 1.5px rgba(16,185,129,0.25),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 4px rgba(16,185,129,0.08);
+            animation: connectedAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes connectedAppear {
+            0%   { transform: scale(0.75); filter: brightness(1.5); }
+            50%  { transform: scale(1.12); }
+            100% { transform: scale(1); filter: brightness(1); }
         }
         .connect-btn.connected-state .power-icon {
             stroke: #10b981;
-            filter: drop-shadow(0 0 6px rgba(16,185,129,0.7));
+            filter: drop-shadow(0 0 7px rgba(16,185,129,0.8));
             animation: powerIconGlow 2s ease-in-out infinite;
+            transform-origin: center;
         }
         .connect-btn.connected-state .connect-ring {
-            border-color: rgba(16,185,129,0.45);
+            border-color: rgba(16,185,129,0.5);
+            animation: connectRingPulse 2.4s ease-out infinite;
+        }
+        .connect-btn.connected-state .connect-ring--2 {
+            animation-delay: 0.8s;
         }
         [data-theme="dark"] .connect-btn.connected-state { color: #34d399; }
-        [data-theme="dark"] .connect-btn.connected-state .power-icon { stroke: #34d399; filter: drop-shadow(0 0 8px rgba(52,211,153,0.7)); }
+        [data-theme="dark"] .connect-btn.connected-state .power-icon { stroke: #34d399; filter: drop-shadow(0 0 9px rgba(52,211,153,0.8)); }
 
         @keyframes powerIconGlow {
             0%,100% { filter: drop-shadow(0 0 4px rgba(16,185,129,0.5)); transform: scale(1); }
-            50%      { filter: drop-shadow(0 0 10px rgba(16,185,129,0.9)); transform: scale(1.06); }
+            50%      { filter: drop-shadow(0 0 12px rgba(16,185,129,1)); transform: scale(1.08); }
         }
 
-        /* Spinner улучшенный */
+        /* Spinner — двойная дуга */
         .connect-btn .spinner {
             display: none;
-            width: 26px;
-            height: 26px;
-            border: 2.5px solid rgba(59,130,246,0.2);
+            width: 28px;
+            height: 28px;
+            border: 2.5px solid rgba(59,130,246,0.15);
             border-top-color: #3b82f6;
-            border-right-color: rgba(59,130,246,0.6);
+            border-right-color: rgba(59,130,246,0.5);
             border-radius: 50%;
-            animation: spinnerDual 0.7s linear infinite;
+            animation: spinnerDual 0.65s linear infinite;
             position: absolute;
             z-index: 2;
-            filter: drop-shadow(0 0 4px rgba(59,130,246,0.5));
+            filter: drop-shadow(0 0 5px rgba(59,130,246,0.6));
         }
         .connect-btn.connecting-state .spinner { display: block; }
         @keyframes spinnerDual { to { transform: rotate(360deg); } }
 
-        /* Ripple при нажатии */
-        .connect-btn::after {
-            content: '';
+        /* JS-ripple элемент */
+        .btn-ripple {
             position: absolute;
-            inset: 0;
             border-radius: 50%;
-            background: rgba(42,82,152,0.15);
+            background: rgba(42,82,152,0.22);
             transform: scale(0);
-            opacity: 1;
-            transition: transform 0.4s ease, opacity 0.4s ease;
+            animation: btnRipple 0.55s cubic-bezier(0.2,0,0.4,1) forwards;
             pointer-events: none;
+            z-index: 4;
         }
-        .connect-btn:active::after {
-            transform: scale(1.5);
-            opacity: 0;
-            transition: none;
+        @keyframes btnRipple {
+            to { transform: scale(2.8); opacity: 0; }
         }
+        [data-theme="dark"] .btn-ripple { background: rgba(107,140,206,0.25); }
 
         /* Отключаем доп. кольца в low-power */
         .low-power .connect-ring,
@@ -728,7 +785,7 @@
 
             <div id="viewProfile" style="display:none;">
                 <div class="profile-card">
-                    <div class="profile-avatar"><img src="newlogo.png" class="apex-logo-img" alt="Apex VPN"></div>
+                    <div class="profile-avatar"><img src="photoprofile-Photoroom.png" class="apex-logo-img" alt="Apex VPN"></div>
                     <div class="profile-badge" id="subBadge">Проверка…</div>
                     <div class="profile-rows">
                         <div class="profile-row"><span class="pr-label">Логин</span><span class="pr-value" id="profLogin">—</span></div>
@@ -1022,6 +1079,28 @@
             }
         }
 
+        function fireTapEffects(e) {
+            // JS-ripple: круг расходится от точки касания
+            const rect = connectBtn.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            const size = Math.max(rect.width, rect.height);
+            const ripple = document.createElement('span');
+            ripple.className = 'btn-ripple';
+            ripple.style.cssText = `width:${size}px;height:${size}px;left:${x - size/2}px;top:${y - size/2}px`;
+            connectBtn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+
+            // Tap-burst кольцо
+            connectBtn.classList.add('tap-burst');
+            setTimeout(() => connectBtn.classList.remove('tap-burst'), 450);
+
+            // Haptic feedback через нативный мост
+            try { if (Bridge && Bridge.haptic) Bridge.haptic('medium'); } catch (_) {}
+        }
+
+        connectBtn.addEventListener('pointerdown', fireTapEffects, { passive: true });
+
         connectBtn.addEventListener('click', () => {
             if (isConnecting) return;
             if (!isConnected) doConnect(); else doDisconnect();
@@ -1170,7 +1249,7 @@
                 }
                 // Нет токена — требуем вход
                 showAuth();
-            }, 1500);
+            }, 5000);
         });
 
         // ===== Автоматический пинг =====
